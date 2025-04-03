@@ -1,0 +1,21 @@
+services:
+  blaekward:
+    build: .
+    container_name: blaekward
+    ports:
+      - "9090:9090"
+      - "9091:9091"
+    networks:
+      - blaek-net
+    restart: unless-stopped
+    environment:
+      - APP_ENV=production
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://localhost:9090/ping || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  blaek-net:
+    driver: bridge
