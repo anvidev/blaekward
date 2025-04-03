@@ -40,3 +40,23 @@ func (e *PrintEvent) Decode(data []byte) error {
 	return json.Unmarshal(data, e)
 }
 func (e *PrintEvent) EventType() string { return "Print" }
+
+type Printer struct {
+	Name string `json:"name"`
+	Addr string `json:"addr"`
+}
+
+type AuthenticationEvent struct {
+	Name     string    `json:"name"`
+	CID      string    `json:"cid"`
+	Key      string    `json:"key"`
+	Printers []Printer `json:"printers"`
+}
+
+func (e *AuthenticationEvent) Encode() ([]byte, error) {
+	return json.Marshal(e)
+}
+func (e *AuthenticationEvent) Decode(data []byte) error {
+	return json.Unmarshal(data, e)
+}
+func (e *AuthenticationEvent) EventType() string { return "Authentication" }

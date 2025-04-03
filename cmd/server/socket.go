@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/anvidev/blaekward/internal/event"
 	"github.com/anvidev/blaekward/internal/utils"
 	"github.com/google/uuid"
 )
@@ -38,12 +39,15 @@ func (s *server) startSocket() {
 func (s *server) handleConnection(conn net.Conn) {
 	id := uuid.New().String()
 
-	if err := s.authenticate(conn); err != nil {
+	cl := &client{
+		conn:  conn,
+		msgCh: make(chan utils.Response, 10),
+	}
+
+	if err := s.authenticate(conn, cl); err != nil {
 		s.logger.Errorw("error authenticating client", "error", err)
 		return
 	}
-
-	cl := &client{conn: conn, msgCh: make(chan utils.Response, 10)}
 
 	s.mu.Lock()
 	s.clients[id] = cl
@@ -81,16 +85,25 @@ func (s *server) handleConnection(conn net.Conn) {
 	}
 }
 
-func (s *server) authenticate(conn net.Conn) error {
+func (s *server) authenticate(conn net.Conn, client *client) error {
 	buf := make([]byte, 1024)
 	n, err := conn.Read(buf)
 	if err != nil {
 		return err
 	}
 
-	if string(buf[:n]) != "abc123" {
+	var authEvent event.AuthenticationEvent
+
+	if err := authEvent.Decode(buf[:n]); err != nil {
+		return err
+	}
+
+	if authEvent.Key != "abc123" {
 		return fmt.Errorf("wrong authentication")
 	}
+
+	client.Printers = authEvent.Printers
+	client.Name = authEvent.Name
 
 	return nil
 }

@@ -11,7 +11,6 @@ import (
 
 	"github.com/anvidev/blaekward/internal/event"
 	"github.com/anvidev/blaekward/internal/utils"
-	"github.com/google/uuid"
 )
 
 var (
@@ -27,15 +26,16 @@ type client struct {
 }
 
 type state struct {
-	ApiKey   string            `json:"api_key"`
-	Name     string            `json:"name"`
-	Printers map[string]string `json:"printers"`
+	Key      string                   `json:"key"`
+	CID      string                   `json:"cid"`
+	Name     string                   `json:"name"`
+	Printers map[string]event.Printer `json:"printers"`
 }
 
-type printer struct {
-	Name string `json:"name"`
-	Addr string `json:"addr"`
-}
+// type printer struct {
+// 	Name string `json:"name"`
+// 	Addr string `json:"addr"`
+// }
 
 func new() *client {
 	return &client{logger: slog.Default()}
@@ -69,7 +69,6 @@ func (c *client) run() {
 	scanner := bufio.NewScanner(conn)
 
 	for scanner.Scan() {
-		traceID := uuid.New().String()
 		b := scanner.Bytes()
 
 		var evt event.Event
@@ -79,7 +78,7 @@ func (c *client) run() {
 			continue
 		}
 
-		c.logger.Info("received event from server", "event", evt.Event, "traceID", traceID)
+		c.logger.Info("received event from server", "event", evt.Event)
 
 		switch evt.Event {
 		case "print":
@@ -182,7 +181,23 @@ func (c *client) authenticate() error {
 	c.conn.SetReadDeadline(time.Now().Add(time.Second * 5))
 	defer c.conn.SetReadDeadline(time.Time{})
 
-	if _, err := c.conn.Write([]byte("abc123")); err != nil {
+	authEvent := event.AuthenticationEvent{
+		Name:     c.State.Name,
+		CID:      c.State.CID,
+		Key:      c.State.Key,
+		Printers: []event.Printer{},
+	}
+
+	for _, printer := range c.State.Printers {
+		authEvent.Printers = append(authEvent.Printers, printer)
+	}
+
+	data, err := authEvent.Encode()
+	if err != nil {
+		return err
+	}
+
+	if _, err := c.conn.Write([]byte(data)); err != nil {
 		return err
 	}
 

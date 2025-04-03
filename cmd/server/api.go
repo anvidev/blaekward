@@ -34,25 +34,26 @@ func (s *server) startApi() {
 
 func (s *server) mount(mux *http.ServeMux) {
 	mux.HandleFunc("GET /ping", s.pingHandler)
-	mux.HandleFunc("GET /machines", s.listMachinesHandler)
+	mux.HandleFunc("GET /clients", s.listMachinesHandler)
 	mux.HandleFunc("POST /{id}/event", s.eventHandler)
+	mux.HandleFunc("GEt /{id}/info", nil)
 }
 
 type response struct {
-	Machines []string `json:"machines"`
+	Clients []*client `json:"clients"`
 }
 
 func (s *server) listMachinesHandler(w http.ResponseWriter, r *http.Request) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	machines := []string{}
+	clients := []*client{}
 
-	for id := range s.clients {
-		machines = append(machines, id)
+	for _, client := range s.clients {
+		clients = append(clients, client)
 	}
 
-	if err := writeJSON(w, http.StatusOK, response{Machines: machines}); err != nil {
+	if err := writeJSON(w, http.StatusOK, response{Clients: clients}); err != nil {
 		s.internalServerError(w, r, err)
 		return
 	}

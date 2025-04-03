@@ -4,6 +4,7 @@ import (
 	"net"
 	"sync"
 
+	"github.com/anvidev/blaekward/internal/event"
 	"github.com/anvidev/blaekward/internal/utils"
 	"go.uber.org/zap"
 )
@@ -23,10 +24,17 @@ type server struct {
 }
 
 type client struct {
-	conn net.Conn
+	conn     net.Conn
+	Name     string          `json:"name"`
+	Printers []event.Printer `json:"printers"`
 
 	msgCh chan utils.Response
 }
+
+// type printer struct {
+// 	Name string `json:"name"`
+// 	Addr string `json:"addr"`
+// }
 
 func new() *server {
 	return &server{
