@@ -2,8 +2,11 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
+	"fmt"
 	"net"
 
+	"github.com/anvidev/blaekward/internal/utils"
 	"github.com/google/uuid"
 )
 
@@ -33,10 +36,14 @@ func (s *server) startSocket() {
 }
 
 func (s *server) handleConnection(conn net.Conn) {
-	defer s.wg.Done()
 	id := uuid.New().String()
 
-	cl := &client{conn: conn, msgCh: make(chan string, 10)}
+	if err := s.authenticate(conn); err != nil {
+		s.logger.Errorw("error authenticating client", "error", err)
+		return
+	}
+
+	cl := &client{conn: conn, msgCh: make(chan utils.Response, 10)}
 
 	s.mu.Lock()
 	s.clients[id] = cl
@@ -49,6 +56,7 @@ func (s *server) handleConnection(conn net.Conn) {
 		conn.Close()
 		delete(s.clients, id)
 		s.mu.Unlock()
+		s.wg.Done()
 		s.logger.Infow("client disconnected", "id", id)
 	}()
 
@@ -57,8 +65,32 @@ func (s *server) handleConnection(conn net.Conn) {
 	for scanner.Scan() {
 		b := scanner.Bytes()
 
-		cl.msgCh <- string(b)
+		var resp utils.Response
 
-		s.logger.Infow("message from client", "message", string(b))
+		if err := json.Unmarshal(b, &resp); err != nil {
+			s.logger.Infow("failed to unmarshal respoonse", "error", err)
+			resp.Success = false
+			resp.Message = "failed to unmarshal response"
+			cl.msgCh <- resp
+			continue
+		}
+
+		cl.msgCh <- resp
+
+		s.logger.Infow("message from client", "message", resp.Message)
 	}
+}
+
+func (s *server) authenticate(conn net.Conn) error {
+	buf := make([]byte, 1024)
+	n, err := conn.Read(buf)
+	if err != nil {
+		return err
+	}
+
+	if string(buf[:n]) != "abc123" {
+		return fmt.Errorf("wrong authentication")
+	}
+
+	return nil
 }

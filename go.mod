@@ -1,4 +1,4 @@
-module github.com/anvidev/inkbyte
+module github.com/anvidev/blaekward
 
 go 1.23.4
 
@@ -6,6 +6,7 @@ require (
 	github.com/go-playground/validator/v10 v10.26.0
 	github.com/google/uuid v1.6.0
 	go.uber.org/zap v1.27.0
+	gopkg.in/ini.v1 v1.67.0
 )
 
 require (
@@ -18,5 +19,4 @@ require (
 	golang.org/x/net v0.34.0 // indirect
 	golang.org/x/sys v0.30.0 // indirect
 	golang.org/x/text v0.22.0 // indirect
-	gopkg.in/ini.v1 v1.67.0 // indirect
 )

@@ -4,11 +4,14 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"net"
 	"sync"
+	"time"
 
-	"github.com/anvidev/inkbyte/internal/event"
+	"github.com/anvidev/blaekward/internal/event"
+	"github.com/anvidev/blaekward/internal/utils"
+	"github.com/google/uuid"
 )
 
 var (
@@ -16,6 +19,8 @@ var (
 )
 
 type client struct {
+	logger *slog.Logger
+
 	mu    sync.Mutex
 	conn  net.Conn
 	State state `json:"state"`
@@ -29,121 +34,108 @@ type state struct {
 
 type printer struct {
 	Name string `json:"name"`
-	IP   string `json:"ip"`
+	Addr string `json:"addr"`
 }
 
 func new() *client {
-	return &client{}
+	return &client{logger: slog.Default()}
 }
 
 func (c *client) run() {
 	if err := c.loadCfg(); err != nil {
-		log.Fatalf("failed to load config: %v", err)
+		c.logger.Error("failed to load config", "error", err)
+		return
 	}
+
+	// url := "blaekward.anvi.dev"
 
 	conn, err := net.Dial("tcp", socketPort)
 	if err != nil {
-		log.Fatalf("failed to dial socket server: %v", err)
+		c.logger.Error("failed to dial socket server", "error", err)
+		return
 	}
 
 	c.conn = conn
 
 	defer conn.Close()
 
-	log.Printf("connected to socket on port %s: %+v", socketPort, c.State)
+	if err := c.authenticate(); err != nil {
+		c.logger.Error("failed to authenticate", "error", err)
+		return
+	}
+
+	c.logger.Info("connected to socket", "port", socketPort, "state", c.State)
 
 	scanner := bufio.NewScanner(conn)
 
 	for scanner.Scan() {
+		traceID := uuid.New().String()
 		b := scanner.Bytes()
 
 		var evt event.Event
 
 		if err := json.Unmarshal(b, &evt); err != nil {
-			log.Printf("error unmarshaling action: %v", err)
+			c.logger.Error("error unmarshaling event", "error", err)
 			continue
 		}
 
-		log.Printf("received event from server - type: %s, payload: %+v", evt.Name, evt.Payload)
+		c.logger.Info("received event from server", "event", evt.Event, "traceID", traceID)
 
-		switch evt.Name {
-		case "test":
-			var testPayload event.TestPayload
-			if err := json.Unmarshal(evt.Payload, &testPayload); err != nil {
-				log.Printf("failed to unmarshal payload for action type %s: %v", "test", err)
-				continue
-			}
-			c.handleTestMessage(testPayload)
+		switch evt.Event {
 		case "print":
 			var payload event.PrintPayload
 			if err := json.Unmarshal(evt.Payload, &payload); err != nil {
-				log.Printf("failed to unmarshal payload for action type %s: %v", "test", err)
+				c.logger.Error("failed to unmarshal event payload", "event", evt.Event, "error", err)
 				continue
 			}
 			if err := c.handlePrintMessage(payload); err != nil {
-				log.Printf("failed to handle print message: %v", err)
+				c.logger.Error("event failed", "event", evt.Event, "error", err)
 				continue
 			}
 		default:
-			log.Printf("unknown event occured: %v", evt)
+			c.logger.Warn("unknown event occured", "event", evt.Event)
 			continue
 		}
 
-		log.Println("handling complete")
+		c.logger.Info("event handling complete", "event", evt.Event)
 	}
 
 	if err := scanner.Err(); err != nil {
-		log.Printf("connection error: %v", err)
+		c.logger.Error("connection error", "error", err)
 	}
 
-	log.Printf("disconnected client from socket")
+	c.logger.Info("disconnected client from socket")
 }
 
 func (c *client) handlePrintMessage(payload event.PrintPayload) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	_, found := c.State.Printers[payload.IP]
+
+	_, found := c.State.Printers[payload.Addr]
 	if !found {
-		if _, err := c.conn.Write([]byte("PRINTER NOT FOUND\n")); err != nil {
-			return err
-		}
-		return fmt.Errorf("printer not found")
+		c.logger.Warn("printer not found", "addr", payload.Addr)
+		return c.sendSocketResponse(utils.Response{
+			Success: false,
+			Message: fmt.Sprintf("printer %s not found", payload.Addr),
+		})
 	}
 
-	ip := fmt.Sprintf("%s:%s", payload.IP, "9100")
-	log.Printf("attempting to dial %s", ip)
+	addr := fmt.Sprintf("%s:%s", payload.Addr, "9100")
 
-	conn, err := newTCPConn(ip)
-	if err != nil {
-		if _, err := c.conn.Write([]byte("PRINTER CONNECTION FAILED\n")); err != nil {
-			return err
-		}
-		return fmt.Errorf("printer connection failed")
-	}
-	defer conn.Close()
-
-	_, err = conn.Write([]byte(payload.Data))
-	if err != nil {
-		log.Println("error sending data to printer:", err)
-		if _, err := c.conn.Write([]byte("PRINTER WRITE FAILED\n")); err != nil {
-			return err
-		}
-		return err
-	} else {
-		log.Println("data sent to printer successfully")
+	if err := c.sendPrinterJob(addr, payload.Data); err != nil {
+		return c.sendSocketResponse(utils.Response{
+			Success: false,
+			Message: err.Error(),
+		})
 	}
 
-	if _, err := c.conn.Write([]byte("PRINT OK\n")); err != nil {
-		return err
-	}
-	return nil
+	return c.sendSocketResponse(utils.Response{
+		Success: true,
+		Message: "Print successful",
+	})
 }
 
-func (c *client) handleTestMessage(payload event.TestPayload) {
-	log.Printf("handling test message: %v", payload)
-}
-
-func newTCPConn(ip string) (*net.TCPConn, error) {
+func connectToPrinter(ip string) (*net.TCPConn, error) {
 	tcp, err := net.ResolveTCPAddr("tcp4", ip)
 	if err != nil {
 		return nil, err
@@ -155,4 +147,44 @@ func newTCPConn(ip string) (*net.TCPConn, error) {
 	}
 
 	return conn, nil
+}
+
+func (c *client) sendPrinterJob(addr, data string) error {
+	conn, err := connectToPrinter(addr)
+	if err != nil {
+		return err
+	}
+
+	defer conn.Close()
+
+	_, err = conn.Write([]byte(data))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *client) sendSocketResponse(r utils.Response) error {
+	data, err := json.Marshal(r)
+	if err != nil {
+		return err
+	}
+
+	if _, err := c.conn.Write(append(data, '\n')); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *client) authenticate() error {
+	c.conn.SetReadDeadline(time.Now().Add(time.Second * 5))
+	defer c.conn.SetReadDeadline(time.Time{})
+
+	if _, err := c.conn.Write([]byte("abc123")); err != nil {
+		return err
+	}
+
+	return nil
 }

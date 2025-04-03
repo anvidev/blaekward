@@ -4,6 +4,7 @@ import (
 	"net"
 	"sync"
 
+	"github.com/anvidev/blaekward/internal/utils"
 	"go.uber.org/zap"
 )
 
@@ -24,7 +25,7 @@ type server struct {
 type client struct {
 	conn net.Conn
 
-	msgCh chan string
+	msgCh chan utils.Response
 }
 
 func new() *server {

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/anvidev/inkbyte/internal/event"
+	"github.com/anvidev/blaekward/internal/event"
 )
 
 func (s *server) startApi() {
@@ -18,9 +18,9 @@ func (s *server) startApi() {
 	srv := &http.Server{
 		Addr:         apiPort,
 		Handler:      mux,
-		ReadTimeout:  time.Minute,
+		ReadTimeout:  time.Second * 30,
 		IdleTimeout:  time.Minute,
-		WriteTimeout: time.Second * 30,
+		WriteTimeout: time.Second * 10,
 	}
 
 	s.mount(mux)
@@ -35,7 +35,7 @@ func (s *server) startApi() {
 func (s *server) mount(mux *http.ServeMux) {
 	mux.HandleFunc("GET /ping", s.pingHandler)
 	mux.HandleFunc("GET /machines", s.listMachinesHandler)
-	mux.HandleFunc("POST /{id}/print", s.printHandler)
+	mux.HandleFunc("POST /{id}/event", s.eventHandler)
 }
 
 type response struct {
@@ -58,7 +58,7 @@ func (s *server) listMachinesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *server) printHandler(w http.ResponseWriter, r *http.Request) {
+func (s *server) eventHandler(w http.ResponseWriter, r *http.Request) {
 	var evt event.Event
 
 	if err := readJSON(w, r, &evt); err != nil {
@@ -68,11 +68,6 @@ func (s *server) printHandler(w http.ResponseWriter, r *http.Request) {
 		default:
 			s.internalServerError(w, r, err)
 		}
-		return
-	}
-
-	if err := validateJSON(&evt); err != nil {
-		s.badRequestError(w, r, err)
 		return
 	}
 
@@ -101,7 +96,7 @@ func (s *server) printHandler(w http.ResponseWriter, r *http.Request) {
 
 	resp := <-cl.msgCh
 
-	w.Write([]byte(resp))
+	writeJSON(w, http.StatusOK, resp)
 }
 
 func (s *server) pingHandler(w http.ResponseWriter, r *http.Request) {
