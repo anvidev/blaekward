@@ -36,8 +36,6 @@ func (s *server) handleConnection(conn net.Conn) {
 	defer s.wg.Done()
 	id := uuid.New().String()
 
-	// authenticate connection
-
 	cl := &client{conn: conn, msgCh: make(chan string, 10)}
 
 	s.mu.Lock()
