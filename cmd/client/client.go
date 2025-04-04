@@ -154,6 +154,11 @@ func (c *client) sendPrinterJob(addr, data string) error {
 		return err
 	}
 
+	// label := zplg.New(203, 76, 51, zplg.Millimeter, zplg.OrientationNormal)
+	// label.AddText(10, 10, "Blaekward", 15, nil)
+	// label.AddCode128(10, 30, "1234567890", zplg.WithBarHeight(40))
+	// bytes := label.Bytes()
+
 	defer conn.Close()
 
 	_, err = conn.Write([]byte(data))
