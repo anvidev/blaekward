@@ -110,7 +110,7 @@ func (c *client) handlePrintMessage(payload event.PrintPayload) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	_, found := c.State.Printers[payload.Addr]
+	printer, found := c.State.Printers[payload.Addr]
 	if !found {
 		c.logger.Warn("printer not found", "addr", payload.Addr)
 		return c.sendSocketResponse(utils.Response{
@@ -119,7 +119,7 @@ func (c *client) handlePrintMessage(payload event.PrintPayload) error {
 		})
 	}
 
-	addr := fmt.Sprintf("%s:%s", payload.Addr, "9100")
+	addr := fmt.Sprintf("%s:%s", printer.Addr, "9100")
 
 	if err := c.sendPrinterJob(addr, payload.Data); err != nil {
 		return c.sendSocketResponse(utils.Response{

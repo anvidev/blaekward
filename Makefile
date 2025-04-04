@@ -1,3 +1,6 @@
+test:
+	@go test -v ./...
+
 server:
 	@go run cmd/server/*.go
 

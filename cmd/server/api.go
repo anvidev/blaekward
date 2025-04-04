@@ -36,7 +36,7 @@ func (s *server) mount(mux *http.ServeMux) {
 	mux.HandleFunc("GET /ping", s.pingHandler)
 	mux.HandleFunc("GET /clients", s.listMachinesHandler)
 	mux.HandleFunc("POST /{id}/event", s.eventHandler)
-	mux.HandleFunc("GEt /{id}/info", nil)
+	// mux.HandleFunc("GEt /{id}/info", nil)
 }
 
 type response struct {
