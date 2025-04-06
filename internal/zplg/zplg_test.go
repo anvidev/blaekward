@@ -5,7 +5,7 @@ import (
 )
 
 func TestAddBardcodeBytes(t *testing.T) {
-	want := []byte("^XA\n^FWN\n^FO40,81^BY3,3.0,60^BCN,60,Y,N,N,N^FD1234ABC^FS\n^XZ")
+	want := []byte("^XA\n^FWN\n^FO40,81^BY3,3.0,60^BC,,,,,^FD1234ABC^FS\n^XZ")
 	zpl := New(208, 51, 26, Millimeter, OrientationNormal)
 	zpl.AddCode128(5, 10, "1234ABC", WithModuleWidth(3), WithBarHeight(60))
 	got := zpl.Bytes()
