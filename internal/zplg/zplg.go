@@ -3,7 +3,6 @@ package zplg
 import (
 	"bytes"
 	"fmt"
-	"math"
 )
 
 // https://labelary.com/viewer.html
@@ -23,7 +22,7 @@ const (
 	OrientationBottomUp             = "B" // read from bottom up (270 degrees)
 )
 
-type ZPLDrawer struct {
+type ZPL struct {
 	dpi         int
 	unit        Unit
 	width       int
@@ -33,8 +32,8 @@ type ZPLDrawer struct {
 	buffer bytes.Buffer
 }
 
-func New(dpi, width, height int, unit Unit, orientation Orientation) *ZPLDrawer {
-	zpld := &ZPLDrawer{
+func New(dpi, width, height int, unit Unit, orientation Orientation) *ZPL {
+	zpld := &ZPL{
 		dpi:         dpi,
 		unit:        unit,
 		width:       width,
@@ -47,17 +46,23 @@ func New(dpi, width, height int, unit Unit, orientation Orientation) *ZPLDrawer 
 	return zpld
 }
 
-func (d *ZPLDrawer) Bytes() []byte {
+func (d *ZPL) Bytes() []byte {
 	d.buffer.WriteString("^XZ")
 	return d.buffer.Bytes()
 }
 
-func (d *ZPLDrawer) String() string {
+func (d *ZPL) String() string {
 	d.buffer.WriteString("^XZ")
 	return d.buffer.String()
 }
 
-func (d *ZPLDrawer) calculateDots(v float64) int {
+func (z *ZPL) AddQRCode(x, y float64, height int, data string) {
+	z.FO(x, y)
+	z.BY(height)
+	z.BQ(data)
+}
+
+func (d *ZPL) calculateDots(v float64) int {
 	switch d.unit {
 	case Inches:
 		return inchesToDots(v, d.dpi)
@@ -84,10 +89,4 @@ func millimetersToDots(mm float64, dpi int) int {
 
 func pointsToDots(points float64, dpi int) int {
 	return int((points / 72) * float64(dpi))
-}
-
-func checkDecimalPlaces(i int, value float64) bool {
-	valuef := value * float64(math.Pow(10.0, float64(i)))
-	extra := valuef - float64(int(valuef))
-	return extra == 0
 }

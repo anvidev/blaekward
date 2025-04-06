@@ -2,7 +2,7 @@ package zplg
 
 import "fmt"
 
-func (d *ZPLDrawer) AddText(x, y float64, content string, height int, width *int) {
+func (d *ZPL) AddText(x, y float64, content string, height int, width *int) {
 	dotx, doty := d.calculateDots(x), d.calculateDots(y)
 	d.buffer.WriteString(fmt.Sprintf("^FO%d,%d", dotx, doty))
 

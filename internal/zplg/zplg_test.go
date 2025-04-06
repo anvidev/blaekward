@@ -16,7 +16,7 @@ func TestAddBardcodeBytes(t *testing.T) {
 }
 
 func TestAddTextBytes(t *testing.T) {
-	want := []byte("^XA\n^FWN\n^FO40,40^A0,40^FDLabels styrer!^FS\n^XZ")
+	want := []byte("^XA\n^FWN\n^FO40,40^A0,115^FDLabels styrer!^FS\n^XZ")
 	zpl := New(208, 51, 26, Millimeter, OrientationNormal)
 	zpl.AddText(5, 5, "Labels styrer!", 40, nil)
 	got := zpl.Bytes()
@@ -27,7 +27,7 @@ func TestAddTextBytes(t *testing.T) {
 }
 
 func TestAddTextString(t *testing.T) {
-	want := "^XA\n^FWN\n^FO40,40^A0,40^FDLabels styrer!^FS\n^XZ"
+	want := "^XA\n^FWN\n^FO40,40^A0,115^FDLabels styrer!^FS\n^XZ"
 	zpl := New(208, 51, 26, Millimeter, OrientationNormal)
 	zpl.AddText(5, 5, "Labels styrer!", 40, nil)
 	got := zpl.String()

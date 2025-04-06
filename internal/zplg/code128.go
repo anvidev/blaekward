@@ -1,7 +1,5 @@
 package zplg
 
-import "fmt"
-
 type Code128Mode string
 
 const (
@@ -25,12 +23,7 @@ type code128Option struct {
 	mode                    Code128Mode // ^BC
 }
 
-func (d *ZPLDrawer) AddCode128(
-	x,
-	y float64,
-	content string,
-	opts ...code128OptionFunc,
-) {
+func (d *ZPL) AddCode128(x, y float64, content string, opts ...code128OptionFunc) {
 	defaultModuleWidth := 2
 	defaultBarRatio := 3.0
 	defaultBarHeight := 10
@@ -41,7 +34,7 @@ func (d *ZPLDrawer) AddCode128(
 		barHeight:   defaultBarHeight,
 
 		orientation:             d.orientation,
-		barcodeHeight:           defaultBarHeight,
+		barcodeHeight:           defaultBarHeight, // TODO: remove from function
 		interpretationLineBelow: true,
 		interpretationLineAbove: false,
 		checkDigit:              false,
@@ -52,42 +45,21 @@ func (d *ZPLDrawer) AddCode128(
 		opt(cfg)
 	}
 
-	dotx, doty := d.calculateDots(x), d.calculateDots(y)
-	d.buffer.WriteString(fmt.Sprintf("^FO%d,%d", dotx, doty))
-
-	// ^BY command
-	if cfg.moduleWidth < 1 && cfg.moduleWidth > 10 {
-		cfg.moduleWidth = defaultModuleWidth
-	}
-	if cfg.barRatio < 2.0 && cfg.barRatio > 3.0 {
-		cfg.barRatio = defaultBarRatio
-	}
-
-	byCmd := fmt.Sprintf("^BY%d,%.1f,%d", cfg.moduleWidth, cfg.barRatio, cfg.barHeight)
-	d.buffer.WriteString(byCmd)
-
-	// ^BC command
-	if cfg.barcodeHeight < 1 && cfg.barcodeHeight > 32000 {
-		cfg.barcodeHeight = cfg.barHeight
-	}
-	lineBelow := "Y"
-	if !cfg.interpretationLineBelow {
-		lineBelow = "N"
-	}
-	lineAbove := "N"
-	if cfg.interpretationLineAbove {
-		lineAbove = "Y"
-	}
-	checkDigit := "N"
-	if cfg.checkDigit {
-		checkDigit = "Y"
-	}
-
-	bcCmd := fmt.Sprintf("^BC%s,%d,%s,%s,%s,%s", cfg.orientation, cfg.barcodeHeight, lineBelow, lineAbove, checkDigit, cfg.mode)
-	d.buffer.WriteString(bcCmd)
-
-	d.buffer.WriteString(fmt.Sprintf("^FD%s", content))
-	d.buffer.WriteString("^FS\n")
+	d.FO(x, y)
+	d.BY(
+		cfg.barHeight,
+		WithBYBarWidthRatio(cfg.barRatio),
+		WithBYModuleWidth(cfg.moduleWidth),
+	)
+	d.BC(
+		WithBCOrientation(cfg.orientation),
+		WithBCTextBelow(cfg.interpretationLineBelow),
+		WithBCTextAbove(cfg.interpretationLineAbove),
+		WithBCCheckDigit(cfg.checkDigit),
+		WithBCMode(BCMode(cfg.mode)),
+	)
+	d.FD(content)
+	d.FS()
 }
 
 func WithModuleWidth(v int) code128OptionFunc {
@@ -144,105 +116,3 @@ func WithOrientation(v Orientation) code128OptionFunc {
 		o.orientation = v
 	}
 }
-
-// func (d *ZPLDrawer) AddBarcodeCode128(
-// 	x,
-// 	y float64,
-// 	moduleWidth *int,
-// 	barRatio *float64,
-// 	barHeight *int,
-// 	orientation BarcodeOrientation,
-// 	barcodeHeight *int,
-// 	interpretationLineBelow *bool,
-// 	interpretationLineAbove *bool,
-// 	checkDigit *bool,
-// 	mode BarcodeMode,
-// 	content string,
-// ) {
-// 	dotx, doty := d.calculateDots(x), d.calculateDots(y)
-// 	d.buffer.WriteString(fmt.Sprintf("^FO%d,%d", dotx, doty))
-//
-// 	// base barcode config
-//
-// 	defualtModuleWidth := 2
-// 	if moduleWidth == nil {
-// 		moduleWidth = &defualtModuleWidth
-// 	} else if *moduleWidth < 1 {
-// 		*moduleWidth = defualtModuleWidth
-// 	} else if *moduleWidth > 10 {
-// 		*moduleWidth = defualtModuleWidth
-// 	}
-//
-// 	defualtBarRatio := 3.0
-// 	if barRatio == nil {
-// 		barRatio = &defualtBarRatio
-// 	} else if *barRatio < 2.0 {
-// 		*barRatio = defualtBarRatio
-// 	} else if *barRatio > 3.0 {
-// 		*barRatio = defualtBarRatio
-// 	} else if !checkDecimalPlaces(1, *barRatio) {
-// 		*barRatio = defualtBarRatio
-// 	}
-//
-// 	defualtBarHeight := 10
-// 	if barHeight == nil {
-// 		barHeight = &defualtBarHeight
-// 	}
-//
-// 	byCmd := fmt.Sprintf("^BY%d,%.1f,%d", *moduleWidth, *barRatio, *barHeight)
-//
-// 	d.buffer.WriteString(byCmd)
-//
-// 	// code 128 command
-//
-// 	defaultBarcodeHeight := *barHeight
-// 	if barcodeHeight == nil {
-// 		barcodeHeight = &defaultBarcodeHeight
-// 	} else if *barcodeHeight < 1 {
-// 		*barcodeHeight = defaultBarcodeHeight
-// 	} else if *barcodeHeight > 32000 {
-// 		*barcodeHeight = defaultBarcodeHeight
-// 	}
-//
-// 	defaultInterpretationLineBelow := true
-// 	if interpretationLineBelow == nil {
-// 		interpretationLineBelow = &defaultInterpretationLineBelow
-// 	}
-// 	interpretationLineBelowValue := "Y"
-// 	if !*interpretationLineBelow {
-// 		interpretationLineBelowValue = "N"
-// 	}
-//
-// 	defaultInterpretationLineAbove := false
-// 	if interpretationLineAbove == nil {
-// 		interpretationLineAbove = &defaultInterpretationLineAbove
-// 	}
-// 	interpretationLineAboveValue := "Y"
-// 	if !*interpretationLineAbove {
-// 		interpretationLineAboveValue = "N"
-// 	}
-//
-// 	defaultCheckDigit := false
-// 	if checkDigit == nil {
-// 		checkDigit = &defaultCheckDigit
-// 	}
-// 	checkDigitValue := "Y"
-// 	if !*checkDigit {
-// 		checkDigitValue = "N"
-// 	}
-//
-// 	bcCmd := fmt.Sprintf(
-// 		"^BC%s,%d,%s,%s,%s,%s",
-// 		orientation,
-// 		*barcodeHeight,
-// 		interpretationLineBelowValue,
-// 		interpretationLineAboveValue,
-// 		checkDigitValue,
-// 		mode,
-// 	)
-// 	d.buffer.WriteString(bcCmd)
-//
-// 	d.buffer.WriteString(fmt.Sprintf("^FD%s", content))
-//
-// 	d.buffer.WriteString("^FS\n")
-// }
