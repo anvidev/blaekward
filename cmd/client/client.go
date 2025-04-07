@@ -32,11 +32,6 @@ type state struct {
 	Printers map[string]event.Printer `json:"printers"`
 }
 
-// type printer struct {
-// 	Name string `json:"name"`
-// 	Addr string `json:"addr"`
-// }
-
 func new() *client {
 	return &client{logger: slog.Default()}
 }
@@ -110,12 +105,12 @@ func (c *client) handlePrintMessage(payload event.PrintPayload) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	printer, found := c.State.Printers[payload.Addr]
+	printer, found := c.State.Printers[payload.PrinterID]
 	if !found {
-		c.logger.Warn("printer not found", "addr", payload.Addr)
+		c.logger.Warn("printer not found", "addr", payload.PrinterID)
 		return c.sendSocketResponse(utils.Response{
 			Success: false,
-			Message: fmt.Sprintf("printer %s not found", payload.Addr),
+			Message: fmt.Sprintf("printer %s not found", payload.PrinterID),
 		})
 	}
 
@@ -193,7 +188,8 @@ func (c *client) authenticate() error {
 		Printers: []event.Printer{},
 	}
 
-	for _, printer := range c.State.Printers {
+	for id, printer := range c.State.Printers {
+		printer.ID = id
 		authEvent.Printers = append(authEvent.Printers, printer)
 	}
 

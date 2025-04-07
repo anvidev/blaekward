@@ -8,25 +8,15 @@ type Event struct {
 }
 
 type PrintPayload struct {
-	Addr string `json:"addr"`
-	Data string `json:"data"`
+	PrinterID string `json:"printer_id"`
+	Data      string `json:"data"`
 }
 
-type EventHandler interface {
-	Handle(Event) error
-}
-
-// event handler interface for both server and client
-// implementation can have a map of map[Event]func(Event) error
-// for easy event handling
-
-type EEvent interface {
+type IEvent interface {
 	Encode() ([]byte, error)
 	Decode(data []byte) error
-	EventType() string
+	Event() string
 }
-
-type HandleFunc func(EEvent) error
 
 type PrintEvent struct {
 	PrinterID string `json:"printer_id"`
@@ -39,9 +29,10 @@ func (e *PrintEvent) Encode() ([]byte, error) {
 func (e *PrintEvent) Decode(data []byte) error {
 	return json.Unmarshal(data, e)
 }
-func (e *PrintEvent) EventType() string { return "Print" }
+func (e *PrintEvent) Event() string { return "Print" }
 
 type Printer struct {
+	ID   string `json:"id"`
 	Name string `json:"name"`
 	Addr string `json:"addr"`
 }

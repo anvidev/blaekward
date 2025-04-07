@@ -24,7 +24,9 @@ type server struct {
 }
 
 type client struct {
-	conn     net.Conn
+	conn net.Conn
+
+	ID       string          `json:"id"`
 	Name     string          `json:"name"`
 	Printers []event.Printer `json:"printers"`
 

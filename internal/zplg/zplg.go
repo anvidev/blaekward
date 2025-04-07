@@ -17,8 +17,8 @@ const (
 	Millimeter      = "mm"
 
 	OrientationNormal   Orientation = "N" // normal
-	Orientation90Deg                = "R" // 90 degrees (clockwise)
-	Orientation180Deg               = "I" // inverted 180 degress
+	OrientationRotated              = "R" // 90 degrees (clockwise)
+	OrientationInverted             = "I" // inverted 180 degress
 	OrientationBottomUp             = "B" // read from bottom up (270 degrees)
 )
 
@@ -89,4 +89,8 @@ func millimetersToDots(mm float64, dpi int) int {
 
 func pointsToDots(points float64, dpi int) int {
 	return int((points / 72) * float64(dpi))
+}
+
+func isAlphaNumeric(c byte) bool {
+	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
 }

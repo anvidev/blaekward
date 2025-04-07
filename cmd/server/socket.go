@@ -40,6 +40,7 @@ func (s *server) handleConnection(conn net.Conn) {
 	id := uuid.New().String()
 
 	cl := &client{
+		ID:    id,
 		conn:  conn,
 		msgCh: make(chan utils.Response, 10),
 	}
