@@ -29,3 +29,21 @@ func TestNewZPL(t *testing.T) {
 		t.Errorf("TestNewZPL() - zpl.unit is incorrect - want %s, got: %s", Millimeter, zpl.unit)
 	}
 }
+
+func TestInchesToDots(t *testing.T) {
+	tests := []struct {
+		inches float64
+		dpi    int
+		want   int
+	}{
+		{inches: 4, dpi: 203, want: 812},
+		{inches: 4.5, dpi: 203, want: 913},
+		{inches: 11, dpi: 300, want: 3300},
+	}
+
+	for i, tt := range tests {
+		if got := InchesToDots(tt.inches, tt.dpi); got != tt.want {
+			t.Errorf("TestInchesToDots() -  dots calculation %d is incorrect - want %d, got: %d", i+1, tt.want, got)
+		}
+	}
+}

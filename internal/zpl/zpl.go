@@ -6,6 +6,7 @@ type OptionFunc[T any] func(*T)
 
 type Unit string
 type Orientation string
+type Justification int
 
 const (
 	Inches     Unit = "inches"
@@ -16,6 +17,10 @@ const (
 	OrientationRotated              = "R"
 	OrientationInverted             = "I"
 	OrientationBottomUp             = "B"
+
+	JustifyLeft  Justification = 0
+	JustifyRight               = 1
+	JustifyAuto                = 2
 )
 
 type zpl struct {
@@ -56,6 +61,11 @@ func New(width, height int, opts ...OptionFunc[zpl]) *zpl {
 	return z
 }
 
+func (z *zpl) Bytes() []byte {
+	z.XZ()
+	return z.buffer.Bytes()
+}
+
 func WithOrientation(o Orientation) OptionFunc[zpl] {
 	return func(z *zpl) { z.orientation = o }
 }
@@ -72,7 +82,7 @@ func WithDpi(v int) OptionFunc[zpl] {
 }
 
 func InchesToDots(inches float64, dpi int) int {
-	return int(inches) * dpi
+	return int(inches * float64(dpi))
 }
 
 func MmToDots(mm float64, dpi int) int {
@@ -90,5 +100,6 @@ func dpiToDpmm(dpi int) int {
 }
 
 func (z *zpl) writeCmd(cmd string) {
-	z.buffer.WriteString(cmd + "\n")
+	z.buffer.WriteString(cmd)
+	z.buffer.WriteByte('\n')
 }
