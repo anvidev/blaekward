@@ -7,6 +7,7 @@ type OptionFunc[T any] func(*T)
 type Unit string
 type Orientation string
 type Justification int
+type Mode string
 
 const (
 	Inches     Unit = "inches"
@@ -21,6 +22,11 @@ const (
 	JustifyLeft  Justification = 0
 	JustifyRight               = 1
 	JustifyAuto                = 2
+
+	ModeNone Mode = "N"
+	ModeUCC       = "U"
+	ModeAuto      = "A"
+	ModeEAN       = "D"
 )
 
 type zpl struct {

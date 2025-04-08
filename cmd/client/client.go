@@ -11,6 +11,7 @@ import (
 
 	"github.com/anvidev/blaekward/internal/event"
 	"github.com/anvidev/blaekward/internal/utils"
+	"github.com/anvidev/blaekward/internal/zpl"
 )
 
 var (
@@ -149,14 +150,41 @@ func (c *client) sendPrinterJob(addr, data string) error {
 		return err
 	}
 
-	// label := zplg.New(203, 76, 51, zplg.Millimeter, zplg.OrientationNormal)
-	// label.AddText(10, 10, "Blaekward", 15, nil)
-	// label.AddCode128(10, 30, "1234567890", zplg.WithBarHeight(40))
-	// bytes := label.Bytes()
+	z := zpl.New(76, 51)
+	z.CF(
+		zpl.WithCFFont("A"),
+		zpl.WithCFCharHeight(30),
+	)
+
+	z.FO(30, 30)
+	z.FD("John Doe")
+	z.FS()
+
+	z.FO(30, 65)
+	z.FD("100 Main Street")
+	z.FS()
+
+	z.FO(30, 100)
+	z.FD("Springfield TN 39021")
+	z.FS()
+
+	z.FO(30, 135)
+	z.FD("United States")
+	z.FS()
+
+	z.BY(
+		zpl.WithModuleWidth(3),
+		zpl.WithBarcodeHeight(135),
+	)
+	z.FO(30, 200)
+	z.BC()
+	z.FD("12345678")
+
+	bytes := z.Bytes()
 
 	defer conn.Close()
 
-	_, err = conn.Write([]byte(data))
+	_, err = conn.Write(bytes)
 	if err != nil {
 		return err
 	}
