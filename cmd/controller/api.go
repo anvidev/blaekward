@@ -42,11 +42,6 @@ func (s *Server) handleMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// if err := json.NewDecoder(r.Body).Decode(&msg); err != nil {
-	// 	http.Error(w, err.Error(), http.StatusBadRequest)
-	// 	return
-	// }
-
 	requestID := uuid.New().String()
 	msg.RequestID = requestID
 
@@ -79,7 +74,7 @@ func (s *Server) handleMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := client.conn.Write(append(bytes, '\n')); err != nil {
+	if err := client.conn.WriteMessage(bytes); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

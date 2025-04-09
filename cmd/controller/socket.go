@@ -1,9 +1,9 @@
 package main
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 
 	"github.com/anvidev/blaekward/internal/conn"
@@ -48,21 +48,18 @@ func (s *Server) handleConnection(c *conn.WrappedConn) {
 
 	s.logger.Info("client connected", "id", clientID)
 
-	scanner := bufio.NewScanner(client.conn)
-
-	for scanner.Scan() {
-		data := scanner.Bytes()
-		// data, err := c.ReadMessage()
-		// if err != nil {
-		// 	switch err {
-		// 	case io.EOF:
-		// 		s.logger.Info("client disconnected")
-		// 		return
-		// 	default:
-		// 		s.logger.Error("read error", "error", err)
-		// 		continue
-		// 	}
-		// }
+	for {
+		data, err := c.ReadMessage()
+		if err != nil {
+			switch err {
+			case io.EOF:
+				s.logger.Info("client disconnected")
+				return
+			default:
+				s.logger.Error("read error", "error", err)
+				continue
+			}
+		}
 
 		msg, err := message.Decode(data)
 		if err != nil {
@@ -79,20 +76,21 @@ func (s *Server) handleConnection(c *conn.WrappedConn) {
 			s.logger.Warn("unhandled message type", "type", msg.Type)
 		}
 	}
-
-	if err := scanner.Err(); err != nil {
-		s.logger.Error("connection error", "error", err)
-	}
 }
 
 func (s *Server) authenticate(c *Client) error {
-	buf := make([]byte, 1024)
-	n, err := c.conn.Read(buf)
+	// buf := make([]byte, 1024)
+	// n, err := c.conn.Read(buf)
+	// if err != nil {
+	// 	return err
+	// }
+	bytes, err := c.conn.ReadMessage()
 	if err != nil {
+		s.logger.Error("failed to decode auth message", "error", err)
 		return err
 	}
 
-	msg, err := message.Decode(buf[:n])
+	msg, err := message.Decode(bytes)
 	if err != nil {
 		s.logger.Error("failed to decode auth message", "error", err)
 		return err

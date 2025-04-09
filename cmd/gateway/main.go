@@ -1,20 +1,20 @@
 package main
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net"
 	"time"
 
+	"github.com/anvidev/blaekward/internal/conn"
 	"github.com/anvidev/blaekward/internal/label"
 	"github.com/anvidev/blaekward/internal/message"
 )
 
 type Gateway struct {
 	logger *slog.Logger
-	conn   net.Conn
+	conn   *conn.WrappedConn
 	State  state
 }
 
@@ -38,10 +38,12 @@ func main() {
 }
 
 func (gw *Gateway) listen() {
-	scanner := bufio.NewScanner(gw.conn)
-
-	for scanner.Scan() {
-		data := scanner.Bytes()
+	for {
+		data, err := gw.conn.ReadMessage()
+		if err != nil {
+			gw.logger.Error("read error", "error", err)
+			return
+		}
 
 		msg, err := message.Decode(data)
 		if err != nil {
@@ -61,13 +63,6 @@ func (gw *Gateway) listen() {
 			continue
 		}
 	}
-
-	if err := scanner.Err(); err != nil {
-		gw.logger.Error("connection error", "error", err)
-	}
-
-	gw.logger.Info("disconnected client from socket")
-
 }
 
 func (gw *Gateway) handleTestLabel(msg *message.Message) {
@@ -257,14 +252,14 @@ func (gw *Gateway) connect(addr string) error {
 		return err
 	}
 
-	conn, err := net.Dial("tcp", addr)
+	rawConn, err := net.Dial("tcp", addr)
 	if err != nil {
 		return err
 	}
 
 	gw.logger.Info("connected to server")
 
-	gw.conn = conn
+	gw.conn = conn.Wrap(rawConn)
 	return gw.authenticate()
 }
 

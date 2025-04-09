@@ -2,12 +2,12 @@ package main
 
 import (
 	"log/slog"
-	"net"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 
+	"github.com/anvidev/blaekward/internal/conn"
 	"github.com/anvidev/blaekward/internal/message"
 )
 
@@ -22,7 +22,7 @@ type Server struct {
 }
 
 type Client struct {
-	conn     net.Conn
+	conn     *conn.WrappedConn
 	ID       string            `json:"id"`
 	Name     string            `json:"name"`
 	Printers []message.Printer `json:"printers"`
