@@ -6,7 +6,7 @@ import (
 )
 
 func TestXZ(t *testing.T) {
-	z := &zpl{buffer: bytes.Buffer{}}
+	z := &ZPL{buffer: bytes.Buffer{}}
 	z.XZ()
 
 	if string(z.buffer.Bytes()) != "^XZ\n" {

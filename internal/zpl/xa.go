@@ -1,5 +1,5 @@
 package zpl
 
-func (z *zpl) XA() {
+func (z *ZPL) XA() {
 	z.writeCmd("^XA")
 }

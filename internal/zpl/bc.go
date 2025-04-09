@@ -11,7 +11,7 @@ type BCCommand struct {
 	mode             *Mode
 }
 
-func (z *zpl) BC(opts ...OptionFunc[BCCommand]) {
+func (z *ZPL) BC(opts ...OptionFunc[BCCommand]) {
 	cfg := &BCCommand{}
 
 	for _, opt := range opts {

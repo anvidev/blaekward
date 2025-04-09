@@ -8,7 +8,7 @@ type cfCommand struct {
 	charWidth  *int
 }
 
-func (z *zpl) CF(opts ...OptionFunc[cfCommand]) {
+func (z *ZPL) CF(opts ...OptionFunc[cfCommand]) {
 	cfg := &cfCommand{}
 
 	for _, opt := range opts {

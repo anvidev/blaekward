@@ -29,7 +29,7 @@ const (
 	ModeEAN       = "D"
 )
 
-type zpl struct {
+type ZPL struct {
 	// Internal buffer for writing zpl commands.
 	buffer bytes.Buffer
 
@@ -52,8 +52,8 @@ type zpl struct {
 	orientation Orientation
 }
 
-func New(width, height int, opts ...OptionFunc[zpl]) *zpl {
-	z := &zpl{
+func New(width, height int, opts ...OptionFunc[ZPL]) *ZPL {
+	z := &ZPL{
 		buffer:      bytes.Buffer{},
 		dpi:         203,
 		dpmm:        8,
@@ -67,21 +67,21 @@ func New(width, height int, opts ...OptionFunc[zpl]) *zpl {
 	return z
 }
 
-func (z *zpl) Bytes() []byte {
+func (z *ZPL) Bytes() []byte {
 	z.XZ()
 	return z.buffer.Bytes()
 }
 
-func WithOrientation(o Orientation) OptionFunc[zpl] {
-	return func(z *zpl) { z.orientation = o }
+func WithOrientation(o Orientation) OptionFunc[ZPL] {
+	return func(z *ZPL) { z.orientation = o }
 }
 
-func WithUnit(unit Unit) OptionFunc[zpl] {
-	return func(z *zpl) { z.unit = unit }
+func WithUnit(unit Unit) OptionFunc[ZPL] {
+	return func(z *ZPL) { z.unit = unit }
 }
 
-func WithDpi(v int) OptionFunc[zpl] {
-	return func(z *zpl) {
+func WithDpi(v int) OptionFunc[ZPL] {
+	return func(z *ZPL) {
 		z.dpi = v
 		z.dpmm = dpiToDpmm(v)
 	}
@@ -105,7 +105,7 @@ func dpiToDpmm(dpi int) int {
 	return int(float64(dpi) / 25.4)
 }
 
-func (z *zpl) writeCmd(cmd string) {
+func (z *ZPL) writeCmd(cmd string) {
 	z.buffer.WriteString(cmd)
 	z.buffer.WriteByte('\n')
 }

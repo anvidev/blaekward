@@ -9,7 +9,7 @@ type ACommand struct {
 	charWidth        *int
 }
 
-func (z *zpl) A(font string, opts ...OptionFunc[ACommand]) {
+func (z *ZPL) A(font string, opts ...OptionFunc[ACommand]) {
 	cfg := &ACommand{font: font}
 
 	for _, opt := range opts {

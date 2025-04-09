@@ -6,7 +6,7 @@ import (
 )
 
 func TestXA(t *testing.T) {
-	z := &zpl{buffer: bytes.Buffer{}}
+	z := &ZPL{buffer: bytes.Buffer{}}
 	z.XA()
 
 	if string(z.buffer.Bytes()) != "^XA\n" {

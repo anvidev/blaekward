@@ -18,7 +18,6 @@ func (c *client) loadCfg() error {
 
 	state.Name = cfg.Section("gateway").Key("name").String()
 	state.Key = cfg.Section("gateway").Key("key").String()
-	state.CID = cfg.Section("gateway").Key("cid").String()
 
 	printerCfgs := cfg.ChildSections("printer")
 	var printers = make(map[string]event.Printer)

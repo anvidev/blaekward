@@ -8,7 +8,7 @@ type FOCommand struct {
 	justification *Justification // only supported on firmware versions v60.14.x, v50.14.x or later
 }
 
-func (z *zpl) FO(x, y int, opts ...OptionFunc[FOCommand]) {
+func (z *ZPL) FO(x, y int, opts ...OptionFunc[FOCommand]) {
 	cfg := &FOCommand{
 		x: x,
 		y: y,

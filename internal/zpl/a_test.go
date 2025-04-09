@@ -6,7 +6,7 @@ import (
 )
 
 func TestA(t *testing.T) {
-	z := &zpl{buffer: bytes.Buffer{}}
+	z := &ZPL{buffer: bytes.Buffer{}}
 	z.A("N")
 
 	if string(z.buffer.Bytes()) != "^AN\n" {
@@ -19,7 +19,7 @@ func TestA(t *testing.T) {
 }
 
 func TestAWithFieldOrientation(t *testing.T) {
-	z := &zpl{buffer: bytes.Buffer{}}
+	z := &ZPL{buffer: bytes.Buffer{}}
 	z.A("N", WithFieldOrientation(OrientationInverted))
 
 	if string(z.buffer.Bytes()) != "^AN,I\n" {
@@ -32,7 +32,7 @@ func TestAWithFieldOrientation(t *testing.T) {
 }
 
 func TestAWithHeight(t *testing.T) {
-	z := &zpl{buffer: bytes.Buffer{}}
+	z := &ZPL{buffer: bytes.Buffer{}}
 	z.A("N", WithCharacterHeight(15))
 
 	if string(z.buffer.Bytes()) != "^AN,15\n" {
@@ -45,7 +45,7 @@ func TestAWithHeight(t *testing.T) {
 }
 
 func TestAWithWidth(t *testing.T) {
-	z := &zpl{buffer: bytes.Buffer{}}
+	z := &ZPL{buffer: bytes.Buffer{}}
 	z.A("N", WithCharacterWidth(20))
 
 	if string(z.buffer.Bytes()) != "^AN\n" {
@@ -58,7 +58,7 @@ func TestAWithWidth(t *testing.T) {
 }
 
 func TestAWithHeightAndWidth(t *testing.T) {
-	z := &zpl{buffer: bytes.Buffer{}}
+	z := &ZPL{buffer: bytes.Buffer{}}
 	z.A("N", WithCharacterHeight(15), WithCharacterWidth(20))
 
 	if string(z.buffer.Bytes()) != "^AN,15,20\n" {

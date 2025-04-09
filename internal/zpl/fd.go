@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-func (z *zpl) FD(content string) {
+func (z *ZPL) FD(content string) {
 	cmd := fmt.Sprintf("^FD%s", content)
 	z.writeCmd(cmd)
 }

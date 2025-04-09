@@ -6,7 +6,7 @@ import (
 )
 
 func TestFD(t *testing.T) {
-	z := &zpl{buffer: bytes.Buffer{}}
+	z := &ZPL{buffer: bytes.Buffer{}}
 	z.FD("ZPL commands are awesome!")
 
 	if string(z.buffer.Bytes()) != "^FDZPL commands are awesome!\n" {

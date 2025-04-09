@@ -8,7 +8,7 @@ type BYCommand struct {
 	barcodeHeight *int
 }
 
-func (z *zpl) BY(opts ...OptionFunc[BYCommand]) {
+func (z *ZPL) BY(opts ...OptionFunc[BYCommand]) {
 	cfg := &BYCommand{}
 
 	for _, opt := range opts {

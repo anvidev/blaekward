@@ -21,10 +21,10 @@ jobs:
         run: go mod verify
       - name: Vet source code
         run: go vet ./...
-      - name: Build client
-        run: go build -o ./bin/client ./cmd/client/*.go
+      - name: Build gateway
+        run: go build -o ./bin/gateway ./cmd/gateway/*.go
       - name: Build server
-        run: go build -o ./bin/server ./cmd/server/*.go
+        run: go build -o ./bin/controller ./cmd/controller/*.go
   lint:
     runs-on: ubuntu-latest
     steps:

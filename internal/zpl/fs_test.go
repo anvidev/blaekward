@@ -6,7 +6,7 @@ import (
 )
 
 func TestFS(t *testing.T) {
-	z := &zpl{buffer: bytes.Buffer{}}
+	z := &ZPL{buffer: bytes.Buffer{}}
 	z.FS()
 
 	if string(z.buffer.Bytes()) != "^FS\n" {
