@@ -1,7 +1,7 @@
 FROM golang:1.23.4 AS builder
 WORKDIR /app
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o blaekward-controller ./cmd/server/*.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o blaekward-controller ./cmd/controller/*.go
 
 FROM alpine:3.18
 WORKDIR /app

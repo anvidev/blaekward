@@ -43,9 +43,9 @@ func (c *client) run() {
 		return
 	}
 
-	// url := "blaekward.anvi.dev"
+	url := "blaekward.anvi.dev"
 
-	conn, err := net.Dial("tcp", socketPort)
+	conn, err := net.Dial("tcp", url+socketPort)
 	if err != nil {
 		c.logger.Error("failed to dial socket server", "error", err)
 		return
