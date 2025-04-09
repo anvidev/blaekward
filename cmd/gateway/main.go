@@ -96,14 +96,14 @@ func (gw *Gateway) handleTestLabel(msg *message.Message) {
 	addr := fmt.Sprintf("%s:%s", printer.Addr, "9100")
 	printerConn, err := dialPrinter(addr)
 	if err != nil {
+		gw.logger.Error("failed to dial printer", "error", err)
+
 		res := &message.ResponseData{
 			RequestID: msg.RequestID,
 			Type:      msg.Type,
 			Success:   false,
 			Message:   fmt.Sprintf("failed to dial printer %s on %s", printer.Name, addr),
 		}
-
-		gw.logger.Error("failed to dial printer", "error", err, "response", res)
 
 		respMsg, err := message.New(message.TypeResponse, res)
 		if err != nil {
@@ -208,6 +208,8 @@ func (gw *Gateway) handleRaw(msg *message.Message) {
 			gw.logger.Error("failed to send response", "error", err)
 			return
 		}
+
+		return
 	}
 
 	if _, err := printerConn.Write(msg.Data); err != nil {
@@ -228,6 +230,8 @@ func (gw *Gateway) handleRaw(msg *message.Message) {
 			gw.logger.Error("failed to send response", "error", err)
 			return
 		}
+
+		return
 	}
 
 	response := &message.ResponseData{
