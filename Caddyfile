@@ -1,0 +1,3 @@
+blaekward.anvi.dev {
+    reverse_proxy blaekward:9090
+}

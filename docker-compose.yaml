@@ -1,20 +1,28 @@
+version: "3.9"
+
 services:
   blaekward:
     build: .
     container_name: blaekward
     ports:
-      - "9090:9090"
-      - "9091:9091"
+      - "9090:9090"  # API server
+      - "9091:9091"  # Socket server
+    networks:
+      - blaek-net
+    environment:
+      - APP_ENV=production
+
+  caddy:
+    image: caddy:latest
+    container_name: caddy
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
     networks:
       - blaek-net
     restart: unless-stopped
-    environment:
-      - APP_ENV=production
-    healthcheck:
-      test: ["CMD-SHELL", "curl --fail http://localhost:9090/ping || exit 1"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
 
 networks:
   blaek-net:
