@@ -18,7 +18,7 @@ func NewTest(name, street, city, country, barcode string) []byte {
 	z.FO(30, 135)
 	z.FD(country)
 	z.FS()
-	z.BY(zpl.WithModuleWidth(3), zpl.WithBarcodeHeight(100))
+	z.BY(zpl.WithModuleWidth(2), zpl.WithBarcodeHeight(100))
 	z.FO(30, 200)
 	z.BC()
 	z.FD(barcode)
