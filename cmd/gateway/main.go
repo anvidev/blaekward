@@ -117,7 +117,13 @@ func (gw *Gateway) handleTestLabel(msg *message.Message) {
 		}
 	}
 
-	labelBytes := label.NewTest(data.Name, data.Street, data.City, data.Country, data.Barcode)
+	labelBytes := label.NewTest(
+		data.Name,
+		data.Street,
+		data.City,
+		data.Country,
+		data.Barcode,
+	)
 
 	if _, err := printerConn.Write(labelBytes); err != nil {
 		res := &message.ResponseData{
