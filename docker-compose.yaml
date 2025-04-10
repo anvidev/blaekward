@@ -3,7 +3,7 @@ services:
     build: .
     container_name: blaekward
     ports:
-      - "443:9090"
+      - "9090:9090"
       - "9091:9091"
     networks:
       - blaek-net
