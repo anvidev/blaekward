@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"time"
 
 	"github.com/anvidev/blaekward/internal/conn"
 	"github.com/anvidev/blaekward/internal/message"
@@ -32,8 +33,6 @@ func (s *Server) startSocket(addr string) {
 }
 
 func (s *Server) handleConnection(c *conn.WrappedConn) {
-	defer c.Close()
-
 	clientID := uuid.New().String()
 	client := &Client{ID: clientID, conn: c}
 
@@ -47,6 +46,13 @@ func (s *Server) handleConnection(c *conn.WrappedConn) {
 	s.cmu.Unlock()
 
 	s.logger.Info("client connected", "id", clientID)
+
+	defer func() {
+		client.conn.Close()
+		s.cmu.Lock()
+		delete(s.clients, clientID)
+		s.cmu.Unlock()
+	}()
 
 	for {
 		data, err := c.ReadMessage()
@@ -68,8 +74,6 @@ func (s *Server) handleConnection(c *conn.WrappedConn) {
 		}
 
 		switch msg.Type {
-		// case message.TypeAuth:
-		// 	s.handleAuth(msg.Data, client)
 		case message.TypeResponse:
 			s.handleResponse(msg.Data)
 		default:
@@ -79,11 +83,9 @@ func (s *Server) handleConnection(c *conn.WrappedConn) {
 }
 
 func (s *Server) authenticate(c *Client) error {
-	// buf := make([]byte, 1024)
-	// n, err := c.conn.Read(buf)
-	// if err != nil {
-	// 	return err
-	// }
+	c.conn.SetReadDeadline(time.Now().Add(time.Second * 2))
+	defer c.conn.SetReadDeadline(time.Time{})
+
 	bytes, err := c.conn.ReadMessage()
 	if err != nil {
 		s.logger.Error("failed to decode auth message", "error", err)
@@ -129,23 +131,4 @@ func (s *Server) handleResponse(raw json.RawMessage) {
 	}
 
 	ch <- data
-}
-
-func (s *Server) handleAuth(raw json.RawMessage, client *Client) {
-	var data message.AuthData
-	if err := json.Unmarshal(raw, &data); err != nil {
-		s.logger.Error("failed to decode auth", "error", err)
-		return
-	}
-
-	if data.Key != "abc123" {
-		s.logger.Warn("invalid auth attempt", "client", data.Name)
-		return
-	}
-
-	s.cmu.Lock()
-	client.Printers = data.Printers
-	s.cmu.Unlock()
-
-	s.logger.Info("client authenticated", "client", data.Name)
 }
