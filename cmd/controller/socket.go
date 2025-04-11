@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/anvidev/blaekward/internal/conn"
+	"github.com/anvidev/blaekward/internal/id"
 	"github.com/anvidev/blaekward/internal/message"
-	"github.com/google/uuid"
 )
 
 func (s *Server) startSocket(addr string) {
@@ -33,7 +33,7 @@ func (s *Server) startSocket(addr string) {
 }
 
 func (s *Server) handleConnection(c *conn.WrappedConn) {
-	clientID := uuid.New().String()
+	clientID := id.Generate(16, id.LettersLower, id.LetterUpper, id.Numbers)
 	client := &Client{ID: clientID, conn: c}
 
 	if err := s.authenticate(client); err != nil {
@@ -48,16 +48,18 @@ func (s *Server) handleConnection(c *conn.WrappedConn) {
 	s.logger.Info("client connected", "id", clientID)
 
 	defer func() {
-		client.conn.Close()
 		s.cmu.Lock()
+		c.Close()
 		delete(s.clients, clientID)
 		s.cmu.Unlock()
+		s.logger.Info("client removed from server")
 	}()
 
 	for {
 		data, err := c.ReadMessage()
 		if err != nil {
 			switch err {
+			case io.ErrUnexpectedEOF:
 			case io.EOF:
 				s.logger.Info("client disconnected")
 				return
@@ -75,7 +77,7 @@ func (s *Server) handleConnection(c *conn.WrappedConn) {
 
 		switch msg.Type {
 		case message.TypeResponse:
-			s.handleResponse(msg.Data)
+			s.handleResponse(msg)
 		default:
 			s.logger.Warn("unhandled message type", "type", msg.Type)
 		}
@@ -98,6 +100,11 @@ func (s *Server) authenticate(c *Client) error {
 		return err
 	}
 
+	if msg.Type != message.TypeAuth {
+		s.logger.Error("failed to decode auth message", "error", "wrong message type")
+		return fmt.Errorf("failed to decode auth message: %s", msg.Type)
+	}
+
 	var data message.AuthData
 	if err := json.Unmarshal(msg.Data, &data); err != nil {
 		s.logger.Error("failed to decode auth", "error", err)
@@ -114,19 +121,19 @@ func (s *Server) authenticate(c *Client) error {
 	return nil
 }
 
-func (s *Server) handleResponse(raw json.RawMessage) {
+func (s *Server) handleResponse(msg *message.Message) {
 	var data message.ResponseData
-	if err := json.Unmarshal(raw, &data); err != nil {
+	if err := json.Unmarshal(msg.Data, &data); err != nil {
 		s.logger.Error("failed to decode response", "error", err)
 		return
 	}
 
 	s.pmu.Lock()
-	ch, found := s.pending[data.RequestID]
+	ch, found := s.pending[msg.RequestID]
 	s.pmu.Unlock()
 
 	if !found {
-		s.logger.Error("request channel not found", "request_id", data.RequestID)
+		s.logger.Error("request channel not found", "request_id", msg.RequestID)
 		return
 	}
 

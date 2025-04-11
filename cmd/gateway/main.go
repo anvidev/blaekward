@@ -27,9 +27,9 @@ type state struct {
 func main() {
 	gw := &Gateway{logger: slog.Default()}
 
-	blaekwardUrl := "blaekward.anvi.dev:9091"
+	// blaekwardUrl := "blaekward.anvi.dev:9091"
 
-	if err := gw.connect(blaekwardUrl); err != nil {
+	if err := gw.connect(":9091"); err != nil {
 		gw.logger.Error("connection failed", "error", err)
 		return
 	}
@@ -75,13 +75,16 @@ func (gw *Gateway) handleTestLabel(msg *message.Message) {
 	printer, found := gw.State.Printers[data.PrinterID]
 	if !found {
 		res := &message.ResponseData{
-			RequestID: msg.RequestID,
-			Type:      msg.Type,
-			Success:   false,
-			Message:   "printer not found",
+			Type:    msg.Type,
+			Success: false,
+			Message: fmt.Sprintf("printer id %s not found", data.PrinterID),
 		}
 
-		respMsg, err := message.New(message.TypeResponse, res)
+		respMsg, err := message.New(
+			message.TypeResponse,
+			res,
+			message.WithRequestID(msg.RequestID),
+		)
 		if err != nil {
 			gw.logger.Error("failed to encode response message", "error", err)
 			return
@@ -99,13 +102,12 @@ func (gw *Gateway) handleTestLabel(msg *message.Message) {
 		gw.logger.Error("failed to dial printer", "error", err)
 
 		res := &message.ResponseData{
-			RequestID: msg.RequestID,
 			Type:      msg.Type,
 			Success:   false,
 			Message:   fmt.Sprintf("failed to dial printer %s on %s", printer.Name, addr),
 		}
 
-		respMsg, err := message.New(message.TypeResponse, res)
+		respMsg, err := message.New(message.TypeResponse, res, message.WithRequestID(msg.RequestID))
 		if err != nil {
 			gw.logger.Error("failed to encode response message", "error", err)
 			return
@@ -127,13 +129,12 @@ func (gw *Gateway) handleTestLabel(msg *message.Message) {
 
 	if _, err := printerConn.Write(labelBytes); err != nil {
 		res := &message.ResponseData{
-			RequestID: msg.RequestID,
 			Type:      msg.Type,
 			Success:   false,
 			Message:   fmt.Sprintf("failed to write to printer %s on %s", printer.Name, addr),
 		}
 
-		respMsg, err := message.New(message.TypeResponse, res)
+		respMsg, err := message.New(message.TypeResponse, res, message.WithRequestID(msg.RequestID))
 		if err != nil {
 			gw.logger.Error("failed to encode response message", "error", err)
 			return
@@ -146,13 +147,12 @@ func (gw *Gateway) handleTestLabel(msg *message.Message) {
 	}
 
 	response := &message.ResponseData{
-		RequestID: msg.RequestID,
 		Type:      msg.Type,
 		Message:   "message handled successfully",
 		Success:   true,
 	}
 
-	respMsg, err := message.New(message.TypeResponse, response)
+	respMsg, err := message.New(message.TypeResponse, response, message.WithRequestID(msg.RequestID))
 	if err != nil {
 		gw.logger.Error("failed to encode response message", "error", err)
 	}
@@ -172,13 +172,12 @@ func (gw *Gateway) handleRaw(msg *message.Message) {
 	printer, found := gw.State.Printers[msgData.PrinterID]
 	if !found {
 		res := &message.ResponseData{
-			RequestID: msg.RequestID,
 			Type:      msg.Type,
 			Success:   false,
 			Message:   "printer not found",
 		}
 
-		respMsg, err := message.New(message.TypeResponse, res)
+		respMsg, err := message.New(message.TypeResponse, res, message.WithRequestID(msg.RequestID))
 		if err != nil {
 			gw.logger.Error("failed to encode response message", "error", err)
 			return
@@ -196,7 +195,6 @@ func (gw *Gateway) handleRaw(msg *message.Message) {
 	printerConn, err := dialPrinter(addr)
 	if err != nil {
 		res := &message.ResponseData{
-			RequestID: msg.RequestID,
 			Type:      msg.Type,
 			Success:   false,
 			Message:   fmt.Sprintf("failed to dial printer %s on %s", printer.Name, addr),
@@ -204,7 +202,7 @@ func (gw *Gateway) handleRaw(msg *message.Message) {
 
 		gw.logger.Error("failed to dial printer", "error", err, "response", res)
 
-		respMsg, err := message.New(message.TypeResponse, res)
+		respMsg, err := message.New(message.TypeResponse, res, message.WithRequestID(msg.RequestID))
 		if err != nil {
 			gw.logger.Error("failed to encode response message", "error", err)
 			return
@@ -220,13 +218,12 @@ func (gw *Gateway) handleRaw(msg *message.Message) {
 
 	if _, err := printerConn.Write(msg.Data); err != nil {
 		res := &message.ResponseData{
-			RequestID: msg.RequestID,
 			Type:      msg.Type,
 			Success:   false,
 			Message:   fmt.Sprintf("failed to write to printer %s on %s", printer.Name, addr),
 		}
 
-		respMsg, err := message.New(message.TypeResponse, res)
+		respMsg, err := message.New(message.TypeResponse, res, message.WithRequestID(msg.RequestID))
 		if err != nil {
 			gw.logger.Error("failed to encode response message", "error", err)
 			return
@@ -241,13 +238,12 @@ func (gw *Gateway) handleRaw(msg *message.Message) {
 	}
 
 	response := &message.ResponseData{
-		RequestID: msg.RequestID,
 		Type:      msg.Type,
 		Message:   "message handled successfully",
 		Success:   true,
 	}
 
-	respMsg, err := message.New(message.TypeResponse, response)
+	respMsg, err := message.New(message.TypeResponse, response, message.WithRequestID(msg.RequestID))
 	if err != nil {
 		gw.logger.Error("failed to encode response message", "error", err)
 	}

@@ -3,8 +3,8 @@ package main
 import (
 	"strings"
 
+	"github.com/anvidev/blaekward/internal/id"
 	"github.com/anvidev/blaekward/internal/message"
-	"github.com/google/uuid"
 	"gopkg.in/ini.v1"
 )
 
@@ -23,7 +23,7 @@ func (gw *Gateway) loadCfg() error {
 	var printers = make(map[string]message.Printer)
 
 	for _, printerCfg := range printerCfgs {
-		id := uuid.New().String()
+		id := id.Generate(8, id.Numbers)
 		ip := printerCfg.Key("addr").String()
 		name := strings.Split(printerCfg.Name(), ".")[1]
 		p := message.Printer{

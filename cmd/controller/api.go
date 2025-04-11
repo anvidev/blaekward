@@ -6,15 +6,16 @@ import (
 	"time"
 
 	"github.com/anvidev/blaekward/internal/message"
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
 
 func (s *Server) startApi(addr string) {
-	mux := http.NewServeMux()
+	mux := chi.NewMux()
 
 	srv := &http.Server{
 		Addr:    addr,
-		Handler: allowAllCORS(mux),
+		Handler: mux,
 	}
 
 	s.mount(mux)
@@ -26,10 +27,15 @@ func (s *Server) startApi(addr string) {
 	}
 }
 
-func (s *Server) mount(m *http.ServeMux) {
-	m.HandleFunc("GET /ping", handlePing)
-	m.HandleFunc("GET /clients", s.handleListClients)
-	m.HandleFunc("POST /{id}/message", s.handleMessage)
+func (s *Server) mount(r *chi.Mux) {
+	r.Use(allowAllCORS)
+
+	r.Route("/v1", func(r chi.Router) {
+		r.Get("/ping", handlePing)
+		r.Get("/clients", s.handleListClients)
+		r.Post("/{id}/message", s.handleMessage)
+	})
+
 }
 
 func (s *Server) handleMessage(w http.ResponseWriter, r *http.Request) {

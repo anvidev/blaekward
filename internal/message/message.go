@@ -34,10 +34,9 @@ type RawData struct {
 }
 
 type ResponseData struct {
-	RequestID string `json:"request_id"`
-	Type      Type   `json:"type"`
-	Success   bool   `json:"success"`
-	Message   string `json:"message"`
+	Type    Type   `json:"type"`
+	Success bool   `json:"success"`
+	Message string `json:"message"`
 }
 
 type AuthData struct {
