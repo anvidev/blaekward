@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"time"
+
+	_ "github.com/lib/pq"
 )
 
 func NewPostgres(url string, maxOpenConns, maxIdleConns int, maxIdleTime time.Duration) (*sql.DB, error) {
@@ -16,7 +18,7 @@ func NewPostgres(url string, maxOpenConns, maxIdleConns int, maxIdleTime time.Du
 	db.SetMaxIdleConns(maxIdleConns)
 	db.SetConnMaxIdleTime(maxIdleTime)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	if err := db.PingContext(ctx); err != nil {

@@ -2,18 +2,25 @@ package store
 
 import (
 	"context"
+	"database/sql"
 	"time"
 )
-
-type Store struct {
-	Key KeyStorer
-}
 
 const (
 	DefaultQueryTimeoutDuration = time.Second * 30
 )
 
-type KeyStorer interface {
-	Create(context.Context, int64) (*Key, error)
-	GetByKey(context.Context, string) (*Key, error)
+type Store struct {
+	APIKeys APIKeysStorer
+}
+
+func New(db *sql.DB) Store {
+	return Store{
+		APIKeys: &apiKeyStore{db},
+	}
+}
+
+type APIKeysStorer interface {
+	Create(context.Context, int64) (*APIKey, error)
+	GetByKey(context.Context, string) (*APIKey, error)
 }

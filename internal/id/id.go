@@ -1,3 +1,5 @@
+// Package id provides a function to generate random id of any positive length, with the added flexibility of using
+// predefined sets or user defined sets.
 package id
 
 import (
@@ -5,15 +7,14 @@ import (
 	"math/big"
 )
 
-type set string
-
 const (
-	LettersLower set = "abcdefghijklmnopqrstuvxyz"
-	LetterUpper      = "ABCDEFGHIJKLMNOPQRSTUVXYZ"
-	Numbers          = "1234567890"
+	LettersLower string = "abcdefghijklmnopqrstuvxyz"
+	LettersUpper        = "ABCDEFGHIJKLMNOPQRSTUVXYZ"
+	Numbers             = "1234567890"
 )
 
-func Generate(n int, sets ...set) string {
+// String returns an [n] length generated id, or "" if it encounters an error.
+func String(n int, sets ...string) string {
 	if n <= 0 {
 		n = 32
 	}
@@ -29,7 +30,7 @@ func Generate(n int, sets ...set) string {
 	for i := range result {
 		randIndex, err := rand.Int(rand.Reader, setLen)
 		if err != nil {
-			panic(err)
+			return ""
 		}
 		result[i] = charSet[randIndex.Int64()]
 	}

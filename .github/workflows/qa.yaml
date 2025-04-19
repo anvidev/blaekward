@@ -22,9 +22,9 @@ jobs:
       - name: Vet source code
         run: go vet ./...
       - name: Build gateway
-        run: go build -o ./bin/gateway ./cmd/gateway/*.go
+        run: go build -o ./bin/client ./cmd/client/*.go
       - name: Build server
-        run: go build -o ./bin/controller ./cmd/controller/*.go
+        run: go build -o ./bin/server ./cmd/server/*.go
   lint:
     runs-on: ubuntu-latest
     steps:

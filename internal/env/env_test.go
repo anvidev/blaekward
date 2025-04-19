@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func TestGetString(t *testing.T) {
+func TestString(t *testing.T) {
 	tests := []struct {
 		name string
 		k    string
@@ -60,7 +60,7 @@ func TestGetString(t *testing.T) {
 				os.Setenv(tt.k, tt.want)
 				t.Cleanup(func() { os.Unsetenv(tt.k) })
 			}
-			got := GetString(tt.k, tt.f)
+			got := String(tt.k, tt.f)
 			if got != tt.want {
 				t.Errorf("GetString() = %v, want %v", got, tt.want)
 			}
@@ -68,7 +68,7 @@ func TestGetString(t *testing.T) {
 	}
 }
 
-func TestGetDuration(t *testing.T) {
+func TestDuration(t *testing.T) {
 	tests := []struct {
 		name string
 		k    string
@@ -114,7 +114,7 @@ func TestGetDuration(t *testing.T) {
 			f:    time.Hour,
 			v:    "-10s",
 			set:  true,
-			want: -10 * time.Second,
+			want: time.Second * -10,
 		},
 		{
 			name: "Get a variable with invalid duration format",
@@ -131,7 +131,7 @@ func TestGetDuration(t *testing.T) {
 				os.Setenv(tt.k, tt.v)
 				t.Cleanup(func() { os.Unsetenv(tt.k) })
 			}
-			got := GetDuration(tt.k, tt.f)
+			got := Duration(tt.k, tt.f)
 			if got != tt.want {
 				t.Errorf("GetDuration() = %v, want %v", got, tt.want)
 			}
@@ -139,7 +139,7 @@ func TestGetDuration(t *testing.T) {
 	}
 }
 
-func TestGetInt(t *testing.T) {
+func TestInt(t *testing.T) {
 	tests := []struct {
 		name string
 		k    string
@@ -202,7 +202,7 @@ func TestGetInt(t *testing.T) {
 				os.Setenv(tt.k, tt.v)
 				t.Cleanup(func() { os.Unsetenv(tt.k) })
 			}
-			got := GetInt(tt.k, tt.f)
+			got := Int(tt.k, tt.f)
 			if got != tt.want {
 				t.Errorf("GetInt() = %v, want %v", got, tt.want)
 			}

@@ -7,8 +7,8 @@ import (
 	"time"
 )
 
-// GetString retrives the value of environment variable `k`. If no value is found, then the fallback value is returned.
-func GetString(k, f string) string {
+// String retrives the value of environment variable `k`. If no value is found, then the fallback value is returned.
+func String(k, f string) string {
 	v, found := os.LookupEnv(k)
 	if !found {
 		return f
@@ -16,10 +16,10 @@ func GetString(k, f string) string {
 	return v
 }
 
-// GetDuration retrieves the value of environment variable `k`. If the variable is present, then the value is parsed
+// Duration retrieves the value of environment variable `k`. If the variable is present, then the value is parsed
 // into `time.Duration`. Should this fail, then the fallback value is returned. If the variable is not present, then
 // the fallback value is returned.
-func GetDuration(k string, f time.Duration) time.Duration {
+func Duration(k string, f time.Duration) time.Duration {
 	v, found := os.LookupEnv(k)
 	if !found {
 		return f
@@ -31,9 +31,9 @@ func GetDuration(k string, f time.Duration) time.Duration {
 	return dur
 }
 
-// GetInt retrieves the value of environment variable `k`. If the variable is present, then the value is parsed
+// Int retrieves the value of environment variable `k`. If the variable is present, then the value is parsed
 // into type `int`. If the variable is not present, then the fallback is returned.
-func GetInt(k string, f int) int {
+func Int(k string, f int) int {
 	v, found := os.LookupEnv(k)
 	if !found {
 		return f

@@ -3,38 +3,38 @@ package main
 import (
 	"strings"
 
+	"github.com/anvidev/blaekward/internal/event"
 	"github.com/anvidev/blaekward/internal/id"
-	"github.com/anvidev/blaekward/internal/message"
 	"gopkg.in/ini.v1"
 )
 
-func (gw *Gateway) loadCfg() error {
+func (gw *Gateway) loadIniFile() error {
 	cfg, err := ini.Load("gateway.ini")
 	if err != nil {
 		return err
 	}
 
-	state := state{}
+	state := setup{}
 
 	state.Name = cfg.Section("gateway").Key("name").String()
 	state.Key = cfg.Section("gateway").Key("key").String()
 
 	printerCfgs := cfg.ChildSections("printer")
-	var printers = make(map[string]message.Printer)
+	var printers = make(map[string]event.Printer)
 
 	for _, printerCfg := range printerCfgs {
-		id := id.Generate(8, id.Numbers)
+		id := id.String(8, id.Numbers)
 		ip := printerCfg.Key("addr").String()
 		name := strings.Split(printerCfg.Name(), ".")[1]
-		p := message.Printer{
+		p := event.Printer{
 			Name: name,
 			Addr: ip,
 		}
 		printers[id] = p
 	}
 
-	gw.State = state
-	gw.State.Printers = printers
+	gw.setup = state
+	gw.setup.Printers = printers
 
 	return nil
 }
