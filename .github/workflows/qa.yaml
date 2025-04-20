@@ -1,0 +1,48 @@
+name: Blaekward QA
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.4'
+      - name: Install dependencies
+        run: go mod tidy
+      - name: Verify dependencies
+        run: go mod verify
+      - name: Vet source code
+        run: go vet ./...
+      - name: Build gateway
+        run: go build -o ./bin/client ./cmd/client/*.go
+      - name: Build server
+        run: go build -o ./bin/server ./cmd/server/*.go
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.4'
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.60
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.4'
+      - name: Test with the Go CLI
+        run: go test -v ./...
