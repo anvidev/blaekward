@@ -1,5 +1,7 @@
 include .envrc
+
 MIGRATIONS_PATH = ./cmd/migrate/migrations
+SERVER_ADDR = postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@localhost/$(POSTGRES_DB)?sslmode=disable
 
 test:
 	@go test -v ./...
