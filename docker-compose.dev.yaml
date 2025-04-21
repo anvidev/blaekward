@@ -31,7 +31,6 @@ services:
       - "9090:9090"
     restart: unless-stopped
     environment:
-      APP_ENV: production
       POSTGRES_ADDR: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable
     depends_on:
       db:

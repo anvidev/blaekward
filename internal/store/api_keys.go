@@ -33,7 +33,11 @@ func (s *apiKeyStore) Create(ctx context.Context, customerID int64) (*APIKey, er
 		return nil, err
 	}
 
-	key := &APIKey{CustomerID: customerID, Key: encoded.String()}
+	key := &APIKey{
+		CustomerID: customerID,
+		Key:        encoded.String(),
+		Inserted:   time.Now().Local(),
+	}
 
 	ctx, cancel := context.WithTimeout(ctx, DefaultQueryTimeoutDuration)
 	defer cancel()
