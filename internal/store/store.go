@@ -21,6 +21,6 @@ func New(db *sql.DB) Store {
 }
 
 type APIKeysStorer interface {
-	Create(context.Context, int64) (*APIKey, error)
+	Create(context.Context, int64, time.Duration) (*APIKey, error)
 	GetByKey(context.Context, string) (*APIKey, error)
 }

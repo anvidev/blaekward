@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/anvidev/blaekward/internal/store"
 )
@@ -19,7 +20,7 @@ func (s *Server) handleCreateAPIKey(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
-	apikey, err := s.store.APIKeys.Create(ctx, payload.CustomerID)
+	apikey, err := s.store.APIKeys.Create(ctx, payload.CustomerID, time.Second*60*60*24*365)
 	if err != nil {
 		switch err {
 		case store.ErrDublicateCustomerID:

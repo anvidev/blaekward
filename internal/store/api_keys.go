@@ -19,14 +19,16 @@ type APIKey struct {
 	CustomerID int64     `json:"customer_id"`
 	Key        string    `json:"key"`
 	Inserted   time.Time `json:"inserted"`
+	Expiry     time.Time `json:"expiry"`
 }
 
 type apiKeyStore struct {
 	db *sql.DB
 }
 
-func (s *apiKeyStore) Create(ctx context.Context, customerID int64) (*APIKey, error) {
+func (s *apiKeyStore) Create(ctx context.Context, customerID int64, expiryDur time.Duration) (*APIKey, error) {
 	uuid := uuid.New().String()
+	expiry := time.Now().Add(expiryDur)
 
 	encoded, err := uuidkey.Encode(uuid)
 	if err != nil {
@@ -36,15 +38,16 @@ func (s *apiKeyStore) Create(ctx context.Context, customerID int64) (*APIKey, er
 	key := &APIKey{
 		CustomerID: customerID,
 		Key:        encoded.String(),
-		Inserted:   time.Now().Local(),
+		Inserted:   time.Now(),
+		Expiry:     expiry,
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, DefaultQueryTimeoutDuration)
 	defer cancel()
 
-	stmt := `insert into api_keys (customer_id, uuid) values ($1, $2) returning inserted`
+	stmt := `insert into api_keys (customer_id, uuid, expiry) values ($1, $2, $3) returning inserted`
 
-	err = s.db.QueryRowContext(ctx, stmt, key.CustomerID, uuid).Scan(&key.Inserted)
+	err = s.db.QueryRowContext(ctx, stmt, key.CustomerID, uuid, expiry).Scan(&key.Inserted)
 	if err != nil {
 		switch {
 		case err.Error() == `pq: duplicate key value violates unique constraint "api_keys_customer_id_key"`:
@@ -68,7 +71,7 @@ func (s *apiKeyStore) GetByKey(ctx context.Context, key string) (*APIKey, error)
 		return nil, err
 	}
 
-	stmt := `select uuid, customer_id, inserted from api_keys where uuid = $1`
+	stmt := `select uuid, customer_id, inserted, expiry from api_keys where uuid = $1`
 
 	ctx, cancel := context.WithTimeout(ctx, DefaultQueryTimeoutDuration)
 	defer cancel()
@@ -83,6 +86,7 @@ func (s *apiKeyStore) GetByKey(ctx context.Context, key string) (*APIKey, error)
 		&APIKey.Key,
 		&APIKey.CustomerID,
 		&APIKey.Inserted,
+		&APIKey.Expiry,
 	)
 	if err != nil {
 		switch err {
@@ -94,4 +98,11 @@ func (s *apiKeyStore) GetByKey(ctx context.Context, key string) (*APIKey, error)
 	}
 
 	return &APIKey, nil
+}
+
+func (k *APIKey) IsExpired() bool {
+	if k.Expiry.IsZero() {
+		return false // never expires
+	}
+	return time.Now().After(k.Expiry)
 }

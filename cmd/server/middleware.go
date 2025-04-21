@@ -43,6 +43,11 @@ func (s *Server) customerAuthorization(next http.Handler) http.Handler {
 			return
 		}
 
+		if apikey.IsExpired() {
+			s.unauthorizedError(w, r, fmt.Errorf("api key is expired"))
+			return
+		}
+
 		ctx = context.WithValue(ctx, contextkeys.CustomerID, apikey.CustomerID)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
@@ -53,7 +58,7 @@ func requestID(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		reqID := r.Header.Get(requestIDTargetHeader)
 		if reqID == "" {
-			reqID = id.String(52, id.LettersLower, id.LettersUpper, id.Numbers)
+			reqID = id.String(32, id.LettersLower, id.LettersUpper, id.Numbers)
 			r.Header.Set(requestIDTargetHeader, reqID)
 		}
 		next.ServeHTTP(w, r)
