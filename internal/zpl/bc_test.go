@@ -1,45 +1,26 @@
 package zpl
 
-import (
-	"bytes"
-	"testing"
-)
+import "testing"
 
-func TestBCCommand(t *testing.T) {
+func TestBC(t *testing.T) {
 	tests := []struct {
-		name    string
-		options []OptionFunc[BCCommand]
-		want    string
+		name string
+		cmd  Commander
+		want string
 	}{
-		{"Default", nil, "^BC,,,,,\n"},
-		{"With Orientation", []OptionFunc[BCCommand]{WithBCOrientation(OrientationInverted)}, "^BCI,,,,,\n"},
-		{"With Barcode Height", []OptionFunc[BCCommand]{WithBCBarcodeHeight(60)}, "^BC,60,,,,\n"},
-		{"With Text Below", []OptionFunc[BCCommand]{WithBCTextBelow(false)}, "^BC,,N,,,\n"},
-		{"With Text Above", []OptionFunc[BCCommand]{WithBCTextAbove(true)}, "^BC,,,Y,,\n"},
-		{"With Check Digit", []OptionFunc[BCCommand]{WithBCCheckDigit(true)}, "^BC,,,,Y,\n"},
-		{"With Mode", []OptionFunc[BCCommand]{WithBCMode(ModeEAN)}, "^BC,,,,,D\n"},
-		{
-			"Full",
-			[]OptionFunc[BCCommand]{
-				WithBCOrientation(OrientationBottomUp),
-				WithBCBarcodeHeight(135),
-				WithBCTextBelow(false),
-				WithBCTextAbove(true),
-				WithBCCheckDigit(true),
-				WithBCMode(ModeUCC),
-			},
-			"^BCB,135,N,Y,Y,U\n",
-		},
+		{name: "Default", cmd: BC(), want: "^BC,,,,,"},
+		{name: "With orientation", cmd: BC().SetOrientation("R"), want: "^BCR,,,,"},
+		{name: "With barcode height", cmd: BC().SetBarcodeHeight(30), want: "^BC,30,,,"},
+		{name: "With text below (off)", cmd: BC().SetTextBelow(false), want: "^BC,,N,,"},
+		{name: "With text above (on)", cmd: BC().SetTextAbove(true), want: "^BC,,,Y,"},
+		{name: "With ucc check digit (on)", cmd: BC().SetUCCCheckDigit(true), want: "^BC,,,Y,"},
+		{name: "With mode", cmd: BC().SetMode("U"), want: "^BC,,,,U"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			z := &ZPL{buffer: bytes.Buffer{}}
-			z.BC(tt.options...)
-			got := string(z.buffer.Bytes())
-
-			if got != tt.want {
-				t.Errorf("want %q, got %q", tt.want, got)
+			if tt.want != tt.cmd.ToZPL() {
+				t.Errorf("by command failed. want %s, got %s", tt.want, tt.cmd.ToZPL())
 			}
 		})
 	}

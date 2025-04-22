@@ -1,24 +1,22 @@
 package zpl
 
-import (
-	"bytes"
-	"testing"
-)
+import "testing"
 
 func TestFO(t *testing.T) {
-	z := &ZPL{buffer: bytes.Buffer{}}
-	z.FO(51, 26)
-
-	if string(z.buffer.Bytes()) != "^FO51,26\n" {
-		t.Errorf("TestFO() - command is not added to buffer correctly - want: %s, got: %s", "^FO51,26\n", string(z.buffer.Bytes()))
+	tests := []struct {
+		name string
+		cmd  Commander
+		want string
+	}{
+		{name: "Top left", cmd: FO(0, 0), want: "^FO0,0"},
+		{name: "Elsewhere", cmd: FO(230, 43), want: "^FO230,43"},
 	}
-}
 
-func TestFOWithJustify(t *testing.T) {
-	z := &ZPL{buffer: bytes.Buffer{}}
-	z.FO(51, 26, WithJustify(JustifyRight))
-
-	if string(z.buffer.Bytes()) != "^FO51,26,1\n" {
-		t.Errorf("TestFO() - command is not added to buffer correctly - want: %s, got: %s", "^FO51,261\n", string(z.buffer.Bytes()))
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.cmd.ToZPL() != tt.want {
+				t.Errorf("fo command failed. want %s, got %s", tt.want, tt.cmd.ToZPL())
+			}
+		})
 	}
 }

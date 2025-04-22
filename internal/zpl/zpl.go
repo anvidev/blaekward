@@ -1,111 +1,58 @@
+// Package zpl2 provides a builder-style API for generating ZPL (Zebra Programming Language) labels.
+// It enables type-safe, composable construction of ZPL commands that can be sent to Zebra printers.
 package zpl
 
-import "bytes"
-
-type OptionFunc[T any] func(*T)
-
-type Unit string
-type Orientation string
-type Justification int
-type Mode string
-
-const (
-	Inches     Unit = "inches"
-	Millimeter      = "mm"
-	Centimeter      = "cm"
-
-	OrientationNormal   Orientation = "N"
-	OrientationRotated              = "R"
-	OrientationInverted             = "I"
-	OrientationBottomUp             = "B"
-
-	JustifyLeft  Justification = 0
-	JustifyRight               = 1
-	JustifyAuto                = 2
-
-	ModeNone Mode = "N"
-	ModeUCC       = "U"
-	ModeAuto      = "A"
-	ModeEAN       = "D"
+import (
+	"strings"
 )
 
-type ZPL struct {
-	// Internal buffer for writing zpl commands.
-	buffer bytes.Buffer
-
-	// DPI of label. Default is 203 dpi
-	dpi int
-
-	// DPMM of label (used for easy conversion of mm/cm to dots).
-	dpmm int
-
-	// Unit of label. Defualt is mm.
-	unit Unit
-
-	// Width of label in dots.
-	width int
-
-	// Height of label in dots.
-	height int
-
-	// Orientation of label. Default: N (normal)
-	orientation Orientation
+// Commander is the core interface that all ZPL commands must implement.
+// It represents any command that can be converted to ZPL format.
+type Commander interface {
+	// ToZPL converts the command to its ZPL string representation
+	ToZPL() string
+	// Validate() error // future validation support
 }
 
-func New(width, height int, opts ...OptionFunc[ZPL]) *ZPL {
-	z := &ZPL{
-		buffer:      bytes.Buffer{},
-		dpi:         203,
-		dpmm:        8,
-		unit:        Millimeter,
-		width:       width,
-		height:      height,
-		orientation: OrientationNormal,
+// Label represents a complete ZPL label with multiple commands.
+// It manages the sequence of commands and compiles them to valid ZPL.
+type Label struct {
+	commands []Commander
+	// errors   []error // future error tracking for validation fails
+	// unit string // future unit convertion
+	// dpi uint // future unit convertion
+}
+
+// NewLabel creates a new Label with default initialization.
+// The label is pre-configured with a starting XA (Start Format) command,
+// which is required at the beginning of every ZPL label.
+func NewLabel() *Label {
+	l := &Label{commands: []Commander{}}
+	l.AddCommand(XA())
+	return l
+}
+
+// AddCommand appends a new command to the label's command sequence.
+// Commands are executed by the printer in the order they are added.
+func (l *Label) AddCommand(cmd Commander) {
+	l.commands = append(l.commands, cmd)
+}
+
+// String compiles all commands into a complete ZPL label string.
+// It automatically adds the XZ (End Format) command as the last command.
+// The returned string is ready to be sent to a Zebra printer.
+func (l *Label) String() string {
+	var sb strings.Builder
+	l.AddCommand(XZ())
+	for _, cmd := range l.commands {
+		sb.WriteString(cmd.ToZPL())
 	}
-
-	z.XA()
-	return z
+	return sb.String()
 }
 
-func (z *ZPL) Bytes() []byte {
-	z.XZ()
-	return z.buffer.Bytes()
-}
-
-func WithOrientation(o Orientation) OptionFunc[ZPL] {
-	return func(z *ZPL) { z.orientation = o }
-}
-
-func WithUnit(unit Unit) OptionFunc[ZPL] {
-	return func(z *ZPL) { z.unit = unit }
-}
-
-func WithDpi(v int) OptionFunc[ZPL] {
-	return func(z *ZPL) {
-		z.dpi = v
-		z.dpmm = dpiToDpmm(v)
-	}
-}
-
-func InchesToDots(inches float64, dpi int) int {
-	return int(inches * float64(dpi))
-}
-
-func MmToDots(mm float64, dpi int) int {
-	dpmm := float64(dpi) / 25.4
-	return int(mm * dpmm)
-}
-
-func CmToDots(cm float64, dpi int) int {
-	dpcm := float64(dpi) / 2.54
-	return int(cm * dpcm)
-}
-
-func dpiToDpmm(dpi int) int {
-	return int(float64(dpi) / 25.4)
-}
-
-func (z *ZPL) writeCmd(cmd string) {
-	z.buffer.WriteString(cmd)
-	z.buffer.WriteByte('\n')
+// boolToZPL converts a boolean value to ZPL's boolean representation.
+// Returns "Y" for true and "N" for false, which is the standard in ZPL.
+// This is an internal helper function not exposed outside the package.
+func boolToZPL(b bool) string {
+	return map[bool]string{true: "Y", false: "N"}[b]
 }

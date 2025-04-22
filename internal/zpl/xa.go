@@ -1,5 +1,11 @@
 package zpl
 
-func (z *ZPL) XA() {
-	z.writeCmd("^XA")
+type xa struct{}
+
+func XA() *xa {
+	return &xa{}
+}
+
+func (xa *xa) ToZPL() string {
+	return "^XA"
 }

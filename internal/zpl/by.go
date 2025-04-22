@@ -2,48 +2,49 @@ package zpl
 
 import "fmt"
 
-type BYCommand struct {
-	moduleWidth   *int
-	barWidthRatio *float64
-	barcodeHeight *int
+type by struct {
+	moduleWidth   uint
+	barRatio      float32
+	barcodeHeight uint
 }
 
-func (z *ZPL) BY(opts ...OptionFunc[BYCommand]) {
-	cfg := &BYCommand{}
+func BY() *by {
+	return &by{}
+}
 
-	for _, opt := range opts {
-		opt(cfg)
-	}
-
+func (by *by) ToZPL() string {
 	cmd := "^BY"
 
-	if cfg.moduleWidth != nil {
-		cmd += fmt.Sprintf("%d,", *cfg.moduleWidth)
+	if by.moduleWidth > 0 {
+		cmd += fmt.Sprintf("%d,", by.moduleWidth)
 	} else {
 		cmd += ","
 	}
 
-	if cfg.barWidthRatio != nil {
-		cmd += fmt.Sprintf("%.1f,", *cfg.barWidthRatio)
+	if by.barRatio > 0 {
+		cmd += fmt.Sprintf("%.1f,", by.barRatio)
 	} else {
 		cmd += ","
 	}
 
-	if cfg.barcodeHeight != nil {
-		cmd += fmt.Sprintf("%d", *cfg.barcodeHeight)
+	if by.barcodeHeight > 0 {
+		cmd += fmt.Sprintf("%d", by.barcodeHeight)
 	}
 
-	z.writeCmd(cmd)
+	return cmd
 }
 
-func WithModuleWidth(v int) OptionFunc[BYCommand] {
-	return func(b *BYCommand) { b.moduleWidth = &v }
+func (by *by) SetModuleWidth(width uint) *by {
+	by.moduleWidth = width
+	return by
 }
 
-func WithBarWidthRatio(v float64) OptionFunc[BYCommand] {
-	return func(b *BYCommand) { b.barWidthRatio = &v }
+func (by *by) SetBarRatio(ratio float32) *by {
+	by.barRatio = ratio
+	return by
 }
 
-func WithBarcodeHeight(v int) OptionFunc[BYCommand] {
-	return func(b *BYCommand) { b.barcodeHeight = &v }
+func (by *by) SetBarcodeHeight(height uint) *by {
+	by.barcodeHeight = height
+	return by
 }

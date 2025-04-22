@@ -2,31 +2,14 @@ package zpl
 
 import "fmt"
 
-type FOCommand struct {
-	x             int
-	y             int
-	justification *Justification // only supported on firmware versions v60.14.x, v50.14.x or later
+type fo struct {
+	x, y uint
 }
 
-func (z *ZPL) FO(x, y int, opts ...OptionFunc[FOCommand]) {
-	cfg := &FOCommand{
-		x: x,
-		y: y,
-	}
-
-	for _, opt := range opts {
-		opt(cfg)
-	}
-
-	cmd := fmt.Sprintf("^FO%d,%d", x, y)
-
-	if cfg.justification != nil {
-		cmd += fmt.Sprintf(",%d", *cfg.justification)
-	}
-
-	z.writeCmd(cmd)
+func FO(x, y uint) *fo {
+	return &fo{x, y}
 }
 
-func WithJustify(v Justification) OptionFunc[FOCommand] {
-	return func(f *FOCommand) { f.justification = &v }
+func (fo *fo) ToZPL() string {
+	return fmt.Sprintf("^FO%d,%d", fo.x, fo.y)
 }

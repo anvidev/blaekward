@@ -2,93 +2,85 @@ package zpl
 
 import "fmt"
 
-type BCCommand struct {
-	orientation      *Orientation
-	barcodeHeight    *int
-	showTextBelow    *bool
-	showTextAbove    *bool
-	addUccCheckDigit *bool
-	mode             *Mode
+type bc struct {
+	orientation   string
+	barcodeHeight uint
+	textBelow     *bool
+	textAbove     *bool
+	uccCheckDigit *bool
+	mode          string
 }
 
-func (z *ZPL) BC(opts ...OptionFunc[BCCommand]) {
-	cfg := &BCCommand{}
+func BC() *bc {
+	return &bc{}
+}
 
-	for _, opt := range opts {
-		opt(cfg)
-	}
-
+func (bc *bc) ToZPL() string {
 	cmd := "^BC"
 
-	if cfg.orientation != nil {
-		cmd += fmt.Sprintf("%s,", *cfg.orientation)
+	if bc.orientation != "" {
+		cmd += fmt.Sprintf("%s,", bc.orientation)
 	} else {
 		cmd += ","
 	}
 
-	if cfg.barcodeHeight != nil {
-		cmd += fmt.Sprintf("%d,", *cfg.barcodeHeight)
+	if bc.barcodeHeight > 0 {
+		cmd += fmt.Sprintf("%d,", bc.barcodeHeight)
 	} else {
 		cmd += ","
 	}
 
-	if cfg.showTextBelow != nil {
-		value := "Y"
-		if !*cfg.showTextBelow {
-			value = "N"
-		}
-		cmd += fmt.Sprintf("%s,", value)
+	if bc.textBelow != nil {
+		cmd += fmt.Sprintf("%s,", boolToZPL(*bc.textBelow))
 	} else {
 		cmd += ","
 	}
 
-	if cfg.showTextAbove != nil {
-		value := "N"
-		if *cfg.showTextAbove {
-			value = "Y"
-		}
-		cmd += fmt.Sprintf("%s,", value)
+	if bc.textAbove != nil {
+		cmd += fmt.Sprintf("%s,", boolToZPL(*bc.textAbove))
 	} else {
 		cmd += ","
 	}
 
-	if cfg.addUccCheckDigit != nil {
-		value := "N"
-		if *cfg.addUccCheckDigit {
-			value = "Y"
-		}
-		cmd += fmt.Sprintf("%s,", value)
+	if bc.uccCheckDigit != nil {
+		cmd += fmt.Sprintf("%s,", boolToZPL(*bc.uccCheckDigit))
 	} else {
 		cmd += ","
 	}
 
-	if cfg.mode != nil {
-		cmd += fmt.Sprintf("%s", *cfg.mode)
+	if bc.mode != "" {
+		cmd += fmt.Sprintf("%s", bc.mode)
 	}
 
-	z.writeCmd(cmd)
+	return cmd
 }
 
-func WithBCOrientation(v Orientation) OptionFunc[BCCommand] {
-	return func(b *BCCommand) { b.orientation = &v }
+func (bc *bc) SetOrientation(orientation string) *bc {
+	bc.orientation = orientation
+	return bc
 }
 
-func WithBCBarcodeHeight(v int) OptionFunc[BCCommand] {
-	return func(b *BCCommand) { b.barcodeHeight = &v }
+func (bc *bc) SetBarcodeHeight(height uint) *bc {
+	bc.barcodeHeight = height
+	return bc
 }
 
-func WithBCTextBelow(v bool) OptionFunc[BCCommand] {
-	return func(b *BCCommand) { b.showTextBelow = &v }
+func (bc *bc) SetTextBelow(on bool) *bc {
+	bc.textBelow = &on
+	return bc
 }
 
-func WithBCTextAbove(v bool) OptionFunc[BCCommand] {
-	return func(b *BCCommand) { b.showTextAbove = &v }
+func (bc *bc) SetTextAbove(on bool) *bc {
+	bc.textAbove = &on
+	return bc
 }
 
-func WithBCCheckDigit(v bool) OptionFunc[BCCommand] {
-	return func(b *BCCommand) { b.addUccCheckDigit = &v }
+func (bc *bc) SetUCCCheckDigit(on bool) *bc {
+	bc.uccCheckDigit = &on
+	return bc
 }
 
-func WithBCMode(v Mode) OptionFunc[BCCommand] {
-	return func(b *BCCommand) { b.mode = &v }
+func (bc *bc) SetMode(mode string) *bc {
+	bc.mode = mode
+	return bc
 }

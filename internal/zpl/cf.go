@@ -1,49 +1,51 @@
 package zpl
 
-import "fmt"
+import (
+	"fmt"
+)
 
-type cfCommand struct {
-	font       *string
-	charHeight *int
-	charWidth  *int
+type cf struct {
+	font          string
+	height, width uint
 }
 
-func (z *ZPL) CF(opts ...OptionFunc[cfCommand]) {
-	cfg := &cfCommand{}
+func CF() *cf {
+	return &cf{}
+}
 
-	for _, opt := range opts {
-		opt(cfg)
-	}
-
+func (cf *cf) ToZPL() string {
 	cmd := "^CF"
 
-	if cfg.font != nil {
-		cmd += fmt.Sprintf("%s,", *cfg.font)
+	if cf.font != "" {
+		cmd += fmt.Sprintf("%s,", cf.font)
 	} else {
 		cmd += ","
 	}
 
-	if cfg.charHeight != nil {
-		cmd += fmt.Sprintf("%d,", *cfg.charHeight)
+	if cf.height > 0 {
+		cmd += fmt.Sprintf("%d,", cf.height)
 	} else {
 		cmd += ","
 	}
 
-	if cfg.charWidth != nil {
-		cmd += fmt.Sprintf("%d", *cfg.charWidth)
+	if cf.width > 0 {
+		cmd += fmt.Sprintf("%d", cf.width)
 	}
 
-	z.writeCmd(cmd)
+	return cmd
 }
 
-func WithCFFont(v string) OptionFunc[cfCommand] {
-	return func(cc *cfCommand) { cc.font = &v }
+func (cf *cf) SetFont(font string) *cf {
+	cf.font = font
+	return cf
 }
 
-func WithCFCharHeight(v int) OptionFunc[cfCommand] {
-	return func(cc *cfCommand) { cc.charHeight = &v }
+func (cf *cf) SetCharacterHeight(height uint) *cf {
+	cf.height = height
+	return cf
 }
 
-func WithCFCharWidth(v int) OptionFunc[cfCommand] {
-	return func(cc *cfCommand) { cc.charWidth = &v }
+func (cf *cf) SetCharacterWidth(width uint) *cf {
+	cf.width = width
+	return cf
 }
