@@ -26,9 +26,6 @@ build-windows:
 install-windows:
 	@sudo cp -r bin/* /mnt/c/dev 
 
-# migration:
-# 	@migrate create -seq -ext sql -dir $(MIGRATIONS_PATH) $(filter-out $@,$(MAKECMDGOALS))
-
 migrate:
 	@read -p "Enter the sequence name: " SEQ; \
 	migrate create -ext sql -dir $(MIGRATIONS_PATH) -seq $${SEQ}
