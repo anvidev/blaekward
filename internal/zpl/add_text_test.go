@@ -8,8 +8,8 @@ func TestAddText(t *testing.T) {
 		cmd  Commander
 		want string
 	}{
-		{name: "Top left empty string", cmd: AddText(0, 0, ""), want: "^FO0,0^FD"},
-		{name: "Elsewhere foobar", cmd: AddText(45, 60, "foobar"), want: "^FO45,60^FDfoobar"},
+		{name: "Top left empty string", cmd: AddText(0, 0, ""), want: "^FO0,0^FD^FS"},
+		{name: "Elsewhere foobar", cmd: AddText(45, 60, "foobar"), want: "^FO45,60^FDfoobar^FS"},
 	}
 
 	for _, tt := range tests {

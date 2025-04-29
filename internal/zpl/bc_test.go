@@ -9,12 +9,12 @@ func TestBC(t *testing.T) {
 		want string
 	}{
 		{name: "Default", cmd: BC(), want: "^BC,,,,,"},
-		{name: "With orientation", cmd: BC().SetOrientation("R"), want: "^BCR,,,,"},
-		{name: "With barcode height", cmd: BC().SetBarcodeHeight(30), want: "^BC,30,,,"},
-		{name: "With text below (off)", cmd: BC().SetTextBelow(false), want: "^BC,,N,,"},
-		{name: "With text above (on)", cmd: BC().SetTextAbove(true), want: "^BC,,,Y,"},
-		{name: "With ucc check digit (on)", cmd: BC().SetUCCCheckDigit(true), want: "^BC,,,Y,"},
-		{name: "With mode", cmd: BC().SetMode("U"), want: "^BC,,,,U"},
+		{name: "With orientation", cmd: BC().SetOrientation("R"), want: "^BCR,,,,,"},
+		{name: "With barcode height", cmd: BC().SetBarcodeHeight(30), want: "^BC,30,,,,"},
+		{name: "With text below (off)", cmd: BC().SetTextBelow(false), want: "^BC,,N,,,"},
+		{name: "With text above (on)", cmd: BC().SetTextAbove(true), want: "^BC,,,Y,,"},
+		{name: "With ucc check digit (on)", cmd: BC().SetUCCCheckDigit(true), want: "^BC,,,,Y,"},
+		{name: "With mode", cmd: BC().SetMode("U"), want: "^BC,,,,,U"},
 	}
 
 	for _, tt := range tests {
