@@ -1,30 +1,25 @@
 package zpl
 
-import (
-	"bytes"
-	"testing"
-)
+import "testing"
 
-func TestBYCommand(t *testing.T) {
+func TestBY(t *testing.T) {
 	tests := []struct {
-		name    string
-		options []OptionFunc[BYCommand]
-		want    string
+		name string
+		cmd  Commander
+		want string
 	}{
-		{name: "Default", options: nil, want: "^BY,,\n"},
-		{name: "With Module Width", options: []OptionFunc[BYCommand]{WithModuleWidth(3)}, want: "^BY3,,\n"},
-		{name: "With Bar Width Ratio", options: []OptionFunc[BYCommand]{WithBarWidthRatio(2.58)}, want: "^BY,2.6,\n"},
-		{name: "With Barcode Height", options: []OptionFunc[BYCommand]{WithBarcodeHeight(135)}, want: "^BY,,135\n"},
+		{name: "Default", cmd: BY(), want: "^BY,,"},
+		{name: "With module width", cmd: BY().SetModuleWidth(3), want: "^BY3,,"},
+		{name: "With bar ratio", cmd: BY().SetBarRatio(2.5), want: "^BY,2.5,"},
+		{name: "With bar ratio (multiple decimals)", cmd: BY().SetBarRatio(2.584), want: "^BY,2.6,"},
+		{name: "With barcode height", cmd: BY().SetBarcodeHeight(30), want: "^BY,,30"},
+		{name: "With module with + barcode height", cmd: BY().SetModuleWidth(3).SetBarcodeHeight(30), want: "^BY3,,30"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			z := &ZPL{buffer: bytes.Buffer{}}
-			z.BY(tt.options...)
-			got := string(z.buffer.Bytes())
-
-			if got != tt.want {
-				t.Errorf("want %q, got %q", tt.want, got)
+			if tt.want != tt.cmd.ToZPL() {
+				t.Errorf("by command failed. want %s, got %s", tt.want, tt.cmd.ToZPL())
 			}
 		})
 	}

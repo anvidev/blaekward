@@ -2,93 +2,128 @@ package zpl
 
 import "fmt"
 
-type BCCommand struct {
-	orientation      *Orientation
-	barcodeHeight    *int
-	showTextBelow    *bool
-	showTextAbove    *bool
-	addUccCheckDigit *bool
-	mode             *Mode
+// BC represents the ZPL Code 128 Barcode command (^BC).
+// This command creates a Code 128 barcode field with customizable parameters.
+//
+// The ^BC command:
+//   - Generates a Code 128 barcode (UCC/EAN-128, Auto, or Standard)
+//   - Supports human-readable text above/below the barcode
+//   - Includes optional UCC check digit calculation
+//   - Must be paired with ^FD (Field Data) and terminated with ^FS
+//
+// Technical Reference:
+// Format: ^BCo,h,f,g,m
+//
+// Parameters:
+//
+//   - o = Orientation (N-normal, R-rotated 90°, I-inverted 180°, B-bottom-up 270°)
+//   - h = Barcode height in dots (1-32000)
+//   - f = Print interpretation line below barcode (Y/N)
+//   - g = Print interpretation line above barcode (Y/N)
+//   - m = Mode (A-auto, D-UCC/EAN, U-standard)
+type bc struct {
+	orientation   string
+	barcodeHeight uint
+	textBelow     *bool
+	textAbove     *bool
+	uccCheckDigit *bool
+	mode          string
 }
 
-func (z *ZPL) BC(opts ...OptionFunc[BCCommand]) {
-	cfg := &BCCommand{}
+// BC creates a new Code 128 Barcode command.
+//
+// Example:
+//
+//	// Basic barcode with default settings
+//	zpl.BC().SetBarcodeHeight(50)
+//
+//	// UCC/EAN-128 barcode with check digit
+//	zpl.BC().SetMode("D").SetUCCCheckDigit(true)
+func BC() *bc {
+	return &bc{}
+}
 
-	for _, opt := range opts {
-		opt(cfg)
-	}
-
+// ToZPL converts the BC command to its ZPL string representation.
+// Returns the properly formatted ^BC command with specified parameters.
+// Example outputs:
+//
+//	"^BCN,50,,,,"      // Normal orientation, 50-dot height
+//	"^BC,,,Y,,A"       // Defaults with text above
+//	"^BCR,30,Y,N,Y,D"  // Rotated UCC barcode with check digit
+func (bc *bc) ToZPL() string {
 	cmd := "^BC"
 
-	if cfg.orientation != nil {
-		cmd += fmt.Sprintf("%s,", *cfg.orientation)
+	if bc.orientation != "" {
+		cmd += fmt.Sprintf("%s,", bc.orientation)
 	} else {
 		cmd += ","
 	}
 
-	if cfg.barcodeHeight != nil {
-		cmd += fmt.Sprintf("%d,", *cfg.barcodeHeight)
+	if bc.barcodeHeight > 0 {
+		cmd += fmt.Sprintf("%d,", bc.barcodeHeight)
 	} else {
 		cmd += ","
 	}
 
-	if cfg.showTextBelow != nil {
-		value := "Y"
-		if !*cfg.showTextBelow {
-			value = "N"
-		}
-		cmd += fmt.Sprintf("%s,", value)
+	if bc.textBelow != nil {
+		cmd += fmt.Sprintf("%s,", boolToZPL(*bc.textBelow))
 	} else {
 		cmd += ","
 	}
 
-	if cfg.showTextAbove != nil {
-		value := "N"
-		if *cfg.showTextAbove {
-			value = "Y"
-		}
-		cmd += fmt.Sprintf("%s,", value)
+	if bc.textAbove != nil {
+		cmd += fmt.Sprintf("%s,", boolToZPL(*bc.textAbove))
 	} else {
 		cmd += ","
 	}
 
-	if cfg.addUccCheckDigit != nil {
-		value := "N"
-		if *cfg.addUccCheckDigit {
-			value = "Y"
-		}
-		cmd += fmt.Sprintf("%s,", value)
+	if bc.uccCheckDigit != nil {
+		cmd += fmt.Sprintf("%s,", boolToZPL(*bc.uccCheckDigit))
 	} else {
 		cmd += ","
 	}
 
-	if cfg.mode != nil {
-		cmd += fmt.Sprintf("%s", *cfg.mode)
+	if bc.mode != "" {
+		cmd += fmt.Sprintf("%s", bc.mode)
 	}
 
-	z.writeCmd(cmd)
+	return cmd
 }
 
-func WithBCOrientation(v Orientation) OptionFunc[BCCommand] {
-	return func(b *BCCommand) { b.orientation = &v }
+// SetOrientation sets the barcode orientation.
+// Valid values: N (normal), R (90°), I (180°), B (270°)
+func (bc *bc) SetOrientation(orientation string) *bc {
+	bc.orientation = orientation
+	return bc
 }
 
-func WithBCBarcodeHeight(v int) OptionFunc[BCCommand] {
-	return func(b *BCCommand) { b.barcodeHeight = &v }
+// SetBarcodeHeight sets the barcode height in dots (1-32000).
+func (bc *bc) SetBarcodeHeight(height uint) *bc {
+	bc.barcodeHeight = height
+	return bc
 }
 
-func WithBCTextBelow(v bool) OptionFunc[BCCommand] {
-	return func(b *BCCommand) { b.showTextBelow = &v }
+// SetTextBelow controls printing of human-readable text below barcode.
+func (bc *bc) SetTextBelow(on bool) *bc {
+	bc.textBelow = &on
+	return bc
 }
 
-func WithBCTextAbove(v bool) OptionFunc[BCCommand] {
-	return func(b *BCCommand) { b.showTextAbove = &v }
+// SetTextAbove controls printing of human-readable text above barcode.
+func (bc *bc) SetTextAbove(on bool) *bc {
+	bc.textAbove = &on
+	return bc
 }
 
-func WithBCCheckDigit(v bool) OptionFunc[BCCommand] {
-	return func(b *BCCommand) { b.addUccCheckDigit = &v }
+// SetUCCCheckDigit enables/disables UCC check digit calculation.
+func (bc *bc) SetUCCCheckDigit(on bool) *bc {
+	bc.uccCheckDigit = &on
+	return bc
 }
 
-func WithBCMode(v Mode) OptionFunc[BCCommand] {
-	return func(b *BCCommand) { b.mode = &v }
+// SetMode sets the Code 128 encoding mode.
+// Valid values: A (auto), D (UCC/EAN-128), U (standard)
+func (bc *bc) SetMode(mode string) *bc {
+	bc.mode = mode
+	return bc
 }

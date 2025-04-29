@@ -1,35 +1,23 @@
 package zpl
 
-import (
-	"bytes"
-	"testing"
-)
+import "testing"
 
-func TestCFCommand(t *testing.T) {
+func TestCF(t *testing.T) {
 	tests := []struct {
-		name    string
-		options []OptionFunc[cfCommand]
-		want    string
+		name string
+		cmd  Commander
+		want string
 	}{
-		{name: "Default", options: nil, want: "^CF,,\n"},
-		{name: "With Font", options: []OptionFunc[cfCommand]{WithCFFont("Z")}, want: "^CFZ,,\n"},
-		{name: "With Character Height", options: []OptionFunc[cfCommand]{WithCFCharHeight(30)}, want: "^CF,30,\n"},
-		{name: "With Character Width", options: []OptionFunc[cfCommand]{WithCFCharWidth(30)}, want: "^CF,,30\n"},
-		{name: "Full", options: []OptionFunc[cfCommand]{
-			WithCFFont("H"),
-			WithCFCharHeight(30),
-			WithCFCharWidth(20),
-		}, want: "^CFH,30,20\n"},
+		{name: "Default", cmd: CF(), want: "^CF,,"},
+		{name: "With font", cmd: CF().SetFont("N"), want: "^CFN,,"},
+		{name: "With character height", cmd: CF().SetCharacterHeight(10), want: "^CF,10,"},
+		{name: "With character width", cmd: CF().SetCharacterWidth(20), want: "^CF,,20"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			z := &ZPL{buffer: bytes.Buffer{}}
-			z.CF(tt.options...)
-			got := string(z.buffer.Bytes())
-
-			if got != tt.want {
-				t.Errorf("want %q, got %q", tt.want, got)
+			if tt.want != tt.cmd.ToZPL() {
+				t.Errorf("cf command failed. want %s, got %s", tt.want, tt.cmd.ToZPL())
 			}
 		})
 	}
